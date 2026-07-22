@@ -11,11 +11,19 @@ export function PartEditor() {
   return (
     <div>
       <h3>パート</h3>
-      <ul style={{ listStyle: "none", padding: 0 }}>
+      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {[...state.roster.parts]
           .sort((a, b) => a.order - b.order)
           .map((part) => (
-            <li key={part.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <li
+              key={part.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 8,
+              }}
+            >
               <ColorSwatchPicker
                 value={part.color}
                 onChange={(color) =>
@@ -36,8 +44,10 @@ export function PartEditor() {
                     patch: { name: e.target.value },
                   })
                 }
+                style={{ width: 140 }}
               />
               <button
+                className="btn-small btn-danger"
                 onClick={() =>
                   dispatch({ type: "REMOVE_PART", partId: part.id })
                 }
@@ -47,25 +57,28 @@ export function PartEditor() {
             </li>
           ))}
       </ul>
-      <input
-        type="text"
-        placeholder="新しいパート名"
-        value={newPartName}
-        onChange={(e) => setNewPartName(e.target.value)}
-      />
-      <button
-        onClick={() => {
-          if (!newPartName.trim()) return;
-          dispatch({
-            type: "ADD_PART",
-            name: newPartName.trim(),
-            color: nextPartColor(state.roster.parts.length),
-          });
-          setNewPartName("");
-        }}
-      >
-        パートを追加
-      </button>
+      <div className="field-row" style={{ marginBottom: 0 }}>
+        <input
+          type="text"
+          placeholder="新しいパート名"
+          value={newPartName}
+          onChange={(e) => setNewPartName(e.target.value)}
+          style={{ width: 160 }}
+        />
+        <button
+          onClick={() => {
+            if (!newPartName.trim()) return;
+            dispatch({
+              type: "ADD_PART",
+              name: newPartName.trim(),
+              color: nextPartColor(state.roster.parts.length),
+            });
+            setNewPartName("");
+          }}
+        >
+          + パートを追加
+        </button>
+      </div>
     </div>
   );
 }

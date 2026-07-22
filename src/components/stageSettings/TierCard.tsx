@@ -115,34 +115,48 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
   }
 
   return (
-    <div style={{ border: "1px solid #ccc", padding: 12, marginBottom: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <strong>{index + 1}段目</strong>
-        <div>
+    <div className="card">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
+        <strong style={{ fontSize: 16 }}>{index + 1}段目</strong>
+        <div style={{ display: "flex", gap: 4 }}>
           <button
+            className="btn-small"
             disabled={isFirst}
             onClick={() =>
               dispatch({ type: "MOVE_TIER", tierId: tier.id, direction: "up" })
             }
+            title="手前に移動"
           >
             ↑
           </button>
           <button
+            className="btn-small"
             disabled={isLast}
             onClick={() =>
               dispatch({ type: "MOVE_TIER", tierId: tier.id, direction: "down" })
             }
+            title="奥に移動"
           >
             ↓
           </button>
-          <button onClick={() => dispatch({ type: "REMOVE_TIER", tierId: tier.id })}>
+          <button
+            className="btn-small btn-danger"
+            onClick={() => dispatch({ type: "REMOVE_TIER", tierId: tier.id })}
+          >
             削除
           </button>
         </div>
       </div>
 
-      <div style={{ marginTop: 8 }}>
-        段の板:{" "}
+      <div className="field-row">
+        <span className="field-label">段の板</span>
         <select value={boardId} onChange={(e) => setBoardId(e.target.value)}>
           {BOARD_CATALOG.map((b) => (
             <option key={b.id} value={b.id}>
@@ -152,28 +166,28 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
           <option value={CUSTOM_BOARD_ID}>その他(自由入力)</option>
         </select>
         {boardId === CUSTOM_BOARD_ID && (
-          <span style={{ marginLeft: 8 }}>
-            幅
+          <>
+            <span>幅</span>
             <input
               type="number"
               value={customWidth}
               onChange={(e) => setCustomWidth(e.target.value)}
-              style={{ width: 70, marginLeft: 4 }}
+              style={{ width: 70 }}
             />
-            mm × 奥行
+            <span>mm × 奥行</span>
             <input
               type="number"
               value={customDepth}
               onChange={(e) => setCustomDepth(e.target.value)}
-              style={{ width: 70, marginLeft: 4 }}
+              style={{ width: 70 }}
             />
-            mm
-          </span>
+            <span>mm</span>
+          </>
         )}
       </div>
 
-      <div style={{ marginTop: 8 }}>
-        枚数:{" "}
+      <div className="field-row">
+        <span className="field-label">枚数</span>
         <input
           type="number"
           min={1}
@@ -181,14 +195,14 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
           onChange={(e) => setCount(e.target.value)}
           style={{ width: 60 }}
         />
-        枚
-        <button onClick={applyBoard} style={{ marginLeft: 8 }}>
+        <span>枚</span>
+        <button className="btn-small" onClick={applyBoard}>
           反映
         </button>
       </div>
 
-      <div style={{ marginTop: 8 }}>
-        この段の高さ(床からの高さ):{" "}
+      <div className="field-row" style={{ marginBottom: 0 }}>
+        <span className="field-label">高さ(床から)</span>
         <select
           value={heightChoice}
           onChange={(e) => selectHeightChoice(e.target.value)}
@@ -201,7 +215,7 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
           <option value={CUSTOM_HEIGHT_CHOICE}>その他(自由入力)</option>
         </select>
         {heightChoice === CUSTOM_HEIGHT_CHOICE && (
-          <span style={{ marginLeft: 8 }}>
+          <>
             <select
               value={heightUnit}
               onChange={(e) =>
@@ -216,30 +230,30 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
                 type="number"
                 value={customHeightMm}
                 onChange={(e) => setCustomHeightMm(e.target.value)}
-                style={{ width: 90, marginLeft: 4 }}
+                style={{ width: 90 }}
               />
             ) : (
-              <span style={{ marginLeft: 4 }}>
+              <>
                 <input
                   type="number"
                   value={customShaku}
                   onChange={(e) => setCustomShaku(e.target.value)}
                   style={{ width: 50 }}
                 />
-                尺
+                <span>尺</span>
                 <input
                   type="number"
                   value={customSun}
                   onChange={(e) => setCustomSun(e.target.value)}
-                  style={{ width: 50, marginLeft: 4 }}
+                  style={{ width: 50 }}
                 />
-                寸
-              </span>
+                <span>寸</span>
+              </>
             )}
-            <button onClick={applyCustomHeight} style={{ marginLeft: 4 }}>
+            <button className="btn-small" onClick={applyCustomHeight}>
               反映
             </button>
-          </span>
+          </>
         )}
       </div>
     </div>

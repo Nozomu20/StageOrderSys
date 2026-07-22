@@ -20,39 +20,52 @@ export function UnplacedMemberList({
   const colorByPartId = new Map(parts.map((p) => [p.id, p.color]));
 
   return (
-    <div style={{ width: 220, overflowY: "auto", borderRight: "1px solid #ccc" }}>
-      <h3 style={{ fontSize: 14, padding: "4px 8px" }}>
-        未配置 ({members.length}名)
-      </h3>
-      <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-        {members.map((m) => (
-          <li
-            key={m.id}
-            onPointerDown={(e) => onDragStart(m.id, e)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "4px 8px",
-              cursor: "grab",
-              userSelect: "none",
-              opacity: draggingMemberId === m.id ? 0.4 : 1,
-              touchAction: "none",
-            }}
-          >
-            <span
+    <div className="sidebar-section" style={{ flex: 1, overflowY: "auto" }}>
+      <div className="sidebar-section-title">未配置({members.length}名)</div>
+      {members.length === 0 ? (
+        <p style={{ fontSize: 13, color: "var(--color-text-muted)", margin: 0 }}>
+          全員配置済みです
+        </p>
+      ) : (
+        <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+          {members.map((m) => (
+            <li
+              key={m.id}
+              onPointerDown={(e) => onDragStart(m.id, e)}
               style={{
-                display: "inline-block",
-                width: 12,
-                height: 12,
-                borderRadius: "50%",
-                background: colorByPartId.get(m.partId) ?? "#999",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "6px 8px",
+                marginBottom: 2,
+                borderRadius: "var(--radius)",
+                cursor: "grab",
+                userSelect: "none",
+                opacity: draggingMemberId === m.id ? 0.4 : 1,
+                touchAction: "none",
               }}
-            />
-            <span>{displayNames.get(m.id) ?? m.familyName}</span>
-          </li>
-        ))}
-      </ul>
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--color-bg)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  flexShrink: 0,
+                  background: colorByPartId.get(m.partId) ?? "#999",
+                }}
+              />
+              <span>{displayNames.get(m.id) ?? m.familyName}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

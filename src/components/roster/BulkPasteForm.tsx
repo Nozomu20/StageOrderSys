@@ -14,16 +14,16 @@ export function BulkPasteForm() {
   return (
     <div>
       <h3>団員の一括登録</h3>
-      <p style={{ fontSize: 12, color: "#666" }}>
+      <p className="screen-hint" style={{ margin: "0 0 8px" }}>
         1行1名で入力してください。姓と名はスペースで区切ります(区切りがなければ姓のみとして扱います)。
       </p>
       <textarea
         rows={6}
-        style={{ width: "100%" }}
+        style={{ width: "100%", marginBottom: 8 }}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <div>
+      <div className="field-row" style={{ marginBottom: 0 }}>
         <select
           value={partId}
           onChange={(e) => setPartId(e.target.value as PartId)}

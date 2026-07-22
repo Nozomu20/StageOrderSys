@@ -23,15 +23,29 @@ function Screens() {
   }
 }
 
+function ScreensArea() {
+  const { uiState } = useUIState();
+  const isFullBleed = uiState.activeTab === "placementEditor";
+  return (
+    <div
+      style={{
+        flex: 1,
+        minHeight: 0,
+        overflow: isFullBleed ? "hidden" : "auto",
+      }}
+    >
+      <Screens />
+    </div>
+  );
+}
+
 export function App() {
   return (
     <DomainStateProvider>
       <UIStateProvider>
-        <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+        <div className="app-shell">
           <TabNav />
-          <div style={{ flex: 1, minHeight: 0 }}>
-            <Screens />
-          </div>
+          <ScreensArea />
         </div>
       </UIStateProvider>
     </DomainStateProvider>

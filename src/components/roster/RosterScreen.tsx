@@ -6,12 +6,20 @@ import { MemberTable } from "./MemberTable";
 
 export function RosterScreen() {
   return (
-    <div style={{ padding: 16 }}>
+    <div className="screen">
       <h2>団員登録</h2>
-      <PartEditor />
-      <AddMemberForm />
-      <BulkPasteForm />
-      <ImportRosterForm />
+      <div className="card">
+        <PartEditor />
+      </div>
+      <div className="card">
+        <AddMemberForm />
+      </div>
+      <div className="card">
+        <BulkPasteForm />
+      </div>
+      <div className="card">
+        <ImportRosterForm />
+      </div>
       <MemberTable />
     </div>
   );

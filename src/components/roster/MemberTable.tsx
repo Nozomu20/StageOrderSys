@@ -12,8 +12,14 @@ export function MemberTable() {
   );
 
   return (
-    <div>
-      <h3>名簿</h3>
+    <div className="card">
+      <h3>名簿({state.roster.members.length}名)</h3>
+      {state.roster.members.length === 0 && (
+        <p className="screen-hint" style={{ margin: 0 }}>
+          まだ団員がいません。上のフォームから追加してください。
+        </p>
+      )}
+      {state.roster.members.length > 0 && (
       <table>
         <thead>
           <tr>
@@ -81,6 +87,7 @@ export function MemberTable() {
               </td>
               <td>
                 <button
+                  className="btn-small btn-danger"
                   onClick={() =>
                     dispatch({ type: "REMOVE_MEMBER", memberId: m.id })
                   }
@@ -92,6 +99,7 @@ export function MemberTable() {
           ))}
         </tbody>
       </table>
+      )}
     </div>
   );
 }

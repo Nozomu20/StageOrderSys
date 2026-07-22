@@ -33,13 +33,15 @@ export function ImportRosterForm() {
   return (
     <div>
       <h3>CSVから団員をインポート</h3>
-      <p style={{ fontSize: 12, color: "#666" }}>
+      <p className="screen-hint" style={{ margin: "0 0 8px" }}>
         1行目をヘッダーとし、「姓」「名」「パート」の列を持つCSVファイルに対応しています(「名」は省略可)。
         パート名が既存のパートと一致しない場合は、新しいパートとして自動的に追加します。
         既存の名簿には追加され、置き換えにはなりません。
       </p>
       <input type="file" accept=".csv,text/csv" onChange={handleFileChange} />
-      {message && <p style={{ fontSize: 12 }}>{message}</p>}
+      {message && (
+        <p style={{ fontSize: 13, marginTop: 8, marginBottom: 0 }}>{message}</p>
+      )}
     </div>
   );
 }

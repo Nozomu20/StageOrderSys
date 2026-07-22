@@ -50,54 +50,62 @@ export function OutputScreen() {
   }
 
   return (
-    <div style={{ padding: 16 }}>
+    <div className="screen">
       <h2>出力</h2>
 
-      <div style={{ marginBottom: 8 }}>
-        タイトル:{" "}
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => commitInfo({ title })}
-        />
-      </div>
-      <div style={{ marginBottom: 8 }}>
-        日付:{" "}
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          onBlur={() => commitInfo({ date })}
-        />
-      </div>
-      <div style={{ marginBottom: 8 }}>
-        団体名:{" "}
-        <input
-          type="text"
-          value={groupName}
-          onChange={(e) => setGroupName(e.target.value)}
-          onBlur={() => commitInfo({ groupName })}
-        />
-      </div>
-
-      <div style={{ marginBottom: 8 }}>
-        PNG解像度:{" "}
-        <select value={scale} onChange={(e) => setScale(e.target.value)}>
-          <option value="1">1倍</option>
-          <option value="2">2倍</option>
-          <option value="3">3倍</option>
-        </select>
-        <button onClick={handleDownloadPng} style={{ marginLeft: 8 }}>
-          PNGをダウンロード
-        </button>
+      <div className="card">
+        <h3>ヘッダー情報</h3>
+        <div className="field-row">
+          <span className="field-label">タイトル</span>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={() => commitInfo({ title })}
+            style={{ width: 260 }}
+          />
+        </div>
+        <div className="field-row">
+          <span className="field-label">日付</span>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            onBlur={() => commitInfo({ date })}
+          />
+        </div>
+        <div className="field-row" style={{ marginBottom: 0 }}>
+          <span className="field-label">団体名</span>
+          <input
+            type="text"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            onBlur={() => commitInfo({ groupName })}
+            style={{ width: 260 }}
+          />
+        </div>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <button onClick={() => window.print()}>印刷する(A4横・PDF)</button>
+      <div className="card">
+        <h3>書き出し</h3>
+        <div className="field-row">
+          <span className="field-label">PNG解像度</span>
+          <select value={scale} onChange={(e) => setScale(e.target.value)}>
+            <option value="1">1倍</option>
+            <option value="2">2倍</option>
+            <option value="3">3倍</option>
+          </select>
+          <button className="btn-primary" onClick={handleDownloadPng}>
+            PNGをダウンロード
+          </button>
+        </div>
+        <div className="field-row" style={{ marginBottom: 0 }}>
+          <span className="field-label">印刷</span>
+          <button onClick={() => window.print()}>印刷する(A4横・PDF)</button>
+        </div>
       </div>
 
-      <p style={{ fontSize: 12, color: "#666" }}>プレビュー:</p>
+      <p className="screen-hint">プレビュー:</p>
       <div className="print-sheet">
         <div className="print-header">
           <div className="print-title">{title}</div>

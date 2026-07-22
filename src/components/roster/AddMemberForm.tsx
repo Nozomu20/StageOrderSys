@@ -26,38 +26,35 @@ export function AddMemberForm() {
   return (
     <div>
       <h3>団員を1人ずつ追加</h3>
-      <input
-        type="text"
-        placeholder="姓"
-        value={familyName}
-        onChange={(e) => setFamilyName(e.target.value)}
-        style={{ width: 100 }}
-      />
-      <input
-        type="text"
-        placeholder="名(任意)"
-        value={givenName}
-        onChange={(e) => setGivenName(e.target.value)}
-        style={{ width: 100, marginLeft: 4 }}
-      />
-      <select
-        value={partId}
-        onChange={(e) => setPartId(e.target.value as PartId)}
-        style={{ marginLeft: 4 }}
-      >
-        {state.roster.parts.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
-      <button
-        onClick={handleAdd}
-        disabled={!familyName.trim() || !partId}
-        style={{ marginLeft: 4 }}
-      >
-        追加
-      </button>
+      <div className="field-row" style={{ marginBottom: 0 }}>
+        <input
+          type="text"
+          placeholder="姓"
+          value={familyName}
+          onChange={(e) => setFamilyName(e.target.value)}
+          style={{ width: 100 }}
+        />
+        <input
+          type="text"
+          placeholder="名(任意)"
+          value={givenName}
+          onChange={(e) => setGivenName(e.target.value)}
+          style={{ width: 100 }}
+        />
+        <select
+          value={partId}
+          onChange={(e) => setPartId(e.target.value as PartId)}
+        >
+          {state.roster.parts.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+        <button onClick={handleAdd} disabled={!familyName.trim() || !partId}>
+          + 追加
+        </button>
+      </div>
     </div>
   );
 }

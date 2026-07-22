@@ -298,7 +298,7 @@ export function PlacementEditorScreen() {
 
   return (
     <div style={{ display: "flex", height: "100%" }}>
-      <div style={{ width: 220, display: "flex", flexDirection: "column" }}>
+      <div className="placement-sidebar">
         <UnplacedMemberList
           members={unplacedMembers}
           parts={state.roster.parts}
@@ -306,8 +306,12 @@ export function PlacementEditorScreen() {
           draggingMemberId={draggingMemberId}
           onDragStart={startDragMember}
         />
-        <div style={{ borderTop: "1px solid #ccc", padding: 8 }}>
-          <label>
+
+        <div className="sidebar-section">
+          <div className="sidebar-section-title">表示</div>
+          <label
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}
+          >
             <input
               type="checkbox"
               checked={snapEnabled}
@@ -315,74 +319,97 @@ export function PlacementEditorScreen() {
             />
             グリッド吸着({state.settings.snapIntervalMm}mm間隔)
           </label>
-          <div style={{ marginTop: 4 }}>
-            <button onClick={() => setViewportOverride(null)}>
-              表示をリセット
+          <button
+            className="btn-small"
+            style={{ marginTop: 8 }}
+            onClick={() => setViewportOverride(null)}
+          >
+            表示をリセット
+          </button>
+        </div>
+
+        <div className="sidebar-section">
+          <div className="sidebar-section-title">指揮者・ピアノ</div>
+          <div style={{ display: "flex", gap: 4 }}>
+            <button
+              className="btn-small"
+              onClick={() => dispatch({ type: "ADD_PROP", propType: "conductor" })}
+            >
+              + 指揮者
+            </button>
+            <button
+              className="btn-small"
+              onClick={() => dispatch({ type: "ADD_PROP", propType: "piano" })}
+            >
+              + ピアノ
             </button>
           </div>
-        </div>
-        <div style={{ borderTop: "1px solid #ccc", padding: 8 }}>
-          <button onClick={() => dispatch({ type: "ADD_PROP", propType: "conductor" })}>
-            指揮者を追加
-          </button>
-          <button
-            onClick={() => dispatch({ type: "ADD_PROP", propType: "piano" })}
-            style={{ marginLeft: 4 }}
-          >
-            ピアノを追加
-          </button>
 
           {selectedProp && (
-            <div style={{ marginTop: 8 }}>
-              <div>選択中: {selectedProp.label ?? selectedProp.type}</div>
-              {selectedProp.type === "piano" && (
-                <div>
-                  <button
-                    onClick={() =>
-                      dispatch({
-                        type: "ROTATE_PROP",
-                        propId: selectedProp.id,
-                        deltaDeg: -30,
-                      })
-                    }
-                  >
-                    左回り
-                  </button>
-                  <button
-                    onClick={() =>
-                      dispatch({
-                        type: "ROTATE_PROP",
-                        propId: selectedProp.id,
-                        deltaDeg: 30,
-                      })
-                    }
-                    style={{ marginLeft: 4 }}
-                  >
-                    右回り
-                  </button>
-                </div>
-              )}
-              <button
-                onClick={() => {
-                  dispatch({ type: "REMOVE_PROP", propId: selectedProp.id });
-                  setSelectedPropId(null);
-                }}
-                style={{ marginTop: 4 }}
-              >
-                削除
-              </button>
+            <div className="selection-panel">
+              <div style={{ fontSize: 13, marginBottom: 6 }}>
+                選択中: <strong>{selectedProp.label ?? selectedProp.type}</strong>
+              </div>
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                {selectedProp.type === "piano" && (
+                  <>
+                    <button
+                      className="btn-small"
+                      onClick={() =>
+                        dispatch({
+                          type: "ROTATE_PROP",
+                          propId: selectedProp.id,
+                          deltaDeg: -30,
+                        })
+                      }
+                    >
+                      ↺ 左回り
+                    </button>
+                    <button
+                      className="btn-small"
+                      onClick={() =>
+                        dispatch({
+                          type: "ROTATE_PROP",
+                          propId: selectedProp.id,
+                          deltaDeg: 30,
+                        })
+                      }
+                    >
+                      ↻ 右回り
+                    </button>
+                  </>
+                )}
+                <button
+                  className="btn-small btn-danger"
+                  onClick={() => {
+                    dispatch({ type: "REMOVE_PROP", propId: selectedProp.id });
+                    setSelectedPropId(null);
+                  }}
+                >
+                  削除
+                </button>
+              </div>
             </div>
           )}
 
           {selectedMemberIds.size > 0 && (
-            <div style={{ marginTop: 8 }}>
-              <div>選択中: {selectedMemberIds.size}名(shift+クリックで複数選択)</div>
-              <button onClick={handleUnplaceSelected}>未配置に戻す</button>
-              {selectedMemberIds.size >= 2 && (
-                <button onClick={handleAlignSelected} style={{ marginLeft: 4 }}>
-                  横一列に整列
+            <div className="selection-panel">
+              <div style={{ fontSize: 13, marginBottom: 6 }}>
+                選択中: <strong>{selectedMemberIds.size}名</strong>
+                <div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
+                  (shift+クリックで複数選択)
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                <button className="btn-small" onClick={handleUnplaceSelected}>
+                  未配置に戻す
                 </button>
-              )}
+                {selectedMemberIds.size >= 2 && (
+                  <button className="btn-small" onClick={handleAlignSelected}>
+                    横一列に整列
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

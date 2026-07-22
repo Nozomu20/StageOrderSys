@@ -10,8 +10,8 @@ export function AllTierHeightForm() {
   );
 
   return (
-    <div style={{ marginBottom: 12 }}>
-      全段を同じ高さに設定:{" "}
+    <div className="card field-row" style={{ marginBottom: 16 }}>
+      <span className="field-label">全段を同じ高さに設定</span>
       <select
         value={heightChoice}
         onChange={(e) => setHeightChoice(e.target.value)}
@@ -23,13 +23,13 @@ export function AllTierHeightForm() {
         ))}
       </select>
       <button
+        className="btn-small"
         onClick={() =>
           dispatch({
             type: "SET_ALL_TIER_HEIGHTS",
             height_mm: mm(Number(heightChoice)),
           })
         }
-        style={{ marginLeft: 4 }}
       >
         全段に適用
       </button>

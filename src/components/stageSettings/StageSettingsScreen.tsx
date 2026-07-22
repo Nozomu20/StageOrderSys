@@ -8,9 +8,9 @@ export function StageSettingsScreen() {
   const sortedTiers = [...state.stage.tiers].sort((a, b) => a.order - b.order);
 
   return (
-    <div style={{ padding: 16 }}>
+    <div className="screen">
       <h2>ステージ設定</h2>
-      <p style={{ fontSize: 12, color: "#666" }}>
+      <p className="screen-hint">
         床(段以外のステージスペース)は自動的に描画されるため、ここでの設定は不要です。
       </p>
       {sortedTiers.length > 0 && <AllTierHeightForm />}
@@ -23,7 +23,9 @@ export function StageSettingsScreen() {
           isLast={i === sortedTiers.length - 1}
         />
       ))}
-      <button onClick={() => dispatch({ type: "ADD_TIER" })}>段を追加</button>
+      <button className="btn-primary" onClick={() => dispatch({ type: "ADD_TIER" })}>
+        + 段を追加
+      </button>
     </div>
   );
 }

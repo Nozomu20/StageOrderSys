@@ -46,58 +46,63 @@ export function SettingsScreen() {
   }
 
   return (
-    <div style={{ padding: 16 }}>
+    <div className="screen">
       <h2>設定</h2>
-      <p style={{ fontSize: 12, color: "#666" }}>
+      <p className="screen-hint">
         配置エディタでのコマの見た目や、重なり判定の基準に使う値です。
       </p>
 
-      <div style={{ marginBottom: 8 }}>
-        1人あたりの占有幅:{" "}
-        <input
-          type="number"
-          value={personSpacing}
-          onChange={(e) => setPersonSpacing(e.target.value)}
-          onBlur={commitPersonSpacing}
-          style={{ width: 90 }}
-        />{" "}
-        mm
-      </div>
+      <div className="card">
+        <div className="field-row">
+          <span className="field-label">1人あたりの占有幅</span>
+          <input
+            type="number"
+            value={personSpacing}
+            onChange={(e) => setPersonSpacing(e.target.value)}
+            onBlur={commitPersonSpacing}
+            style={{ width: 90 }}
+          />
+          <span>mm</span>
+        </div>
 
-      <div style={{ marginBottom: 8 }}>
-        コマの直径:{" "}
-        <input
-          type="number"
-          value={chipDiameter}
-          onChange={(e) => setChipDiameter(e.target.value)}
-          onBlur={commitChipDiameter}
-          style={{ width: 90 }}
-        />{" "}
-        mm
-      </div>
+        <div className="field-row">
+          <span className="field-label">コマの直径</span>
+          <input
+            type="number"
+            value={chipDiameter}
+            onChange={(e) => setChipDiameter(e.target.value)}
+            onBlur={commitChipDiameter}
+            style={{ width: 90 }}
+          />
+          <span>mm</span>
+        </div>
 
-      <div style={{ marginBottom: 8 }}>
-        コマ内の文字サイズ:{" "}
-        <input
-          type="number"
-          value={fontSize}
-          onChange={(e) => setFontSize(e.target.value)}
-          onBlur={commitFontSize}
-          style={{ width: 90 }}
-        />{" "}
-        mm
-      </div>
+        <div className="field-row">
+          <span className="field-label">コマ内の文字サイズ</span>
+          <input
+            type="number"
+            value={fontSize}
+            onChange={(e) => setFontSize(e.target.value)}
+            onBlur={commitFontSize}
+            style={{ width: 90 }}
+          />
+          <span>mm</span>
+        </div>
 
-      <div style={{ marginBottom: 8 }}>
-        グリッド吸着の間隔(配置エディタのON/OFFは別途切り替え):{" "}
-        <input
-          type="number"
-          value={snapInterval}
-          onChange={(e) => setSnapInterval(e.target.value)}
-          onBlur={commitSnapInterval}
-          style={{ width: 90 }}
-        />{" "}
-        mm
+        <div className="field-row" style={{ marginBottom: 0 }}>
+          <span className="field-label">グリッド吸着の間隔</span>
+          <input
+            type="number"
+            value={snapInterval}
+            onChange={(e) => setSnapInterval(e.target.value)}
+            onBlur={commitSnapInterval}
+            style={{ width: 90 }}
+          />
+          <span>mm</span>
+        </div>
+        <p className="screen-hint" style={{ margin: "8px 0 0" }}>
+          グリッド吸着のON/OFF自体は配置エディタのサイドバーで切り替えます。
+        </p>
       </div>
     </div>
   );

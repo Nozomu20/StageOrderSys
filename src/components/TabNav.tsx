@@ -13,24 +13,15 @@ const TABS: { tab: ScreenTab; label: string }[] = [
 export function TabNav() {
   const { uiState, setUIState } = useUIState();
   return (
-    <nav
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 8,
-        borderBottom: "1px solid #ccc",
-        padding: 8,
-      }}
-    >
-      <div style={{ display: "flex", gap: 8 }}>
+    <nav className="tab-nav">
+      <div className="tab-nav-tabs">
         {TABS.map(({ tab, label }) => (
           <button
             key={tab}
+            className={
+              "tab-button" + (uiState.activeTab === tab ? " is-active" : "")
+            }
             onClick={() => setUIState({ activeTab: tab })}
-            style={{
-              fontWeight: uiState.activeTab === tab ? "bold" : "normal",
-            }}
           >
             {label}
           </button>
