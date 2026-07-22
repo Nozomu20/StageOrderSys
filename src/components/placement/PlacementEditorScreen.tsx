@@ -3,12 +3,16 @@ import { useDomainDispatch, useDomainState } from "../../state/DomainStateContex
 import { resolveDisplayNames } from "../../domain/displayName";
 import { clientPointToMm } from "../../coords/pointerToMm";
 import { mm } from "../../domain/units";
-import type { MemberId } from "../../domain/ids";
+import type { MemberId, PropId } from "../../domain/ids";
 import { UnplacedMemberList } from "./UnplacedMemberList";
 import { StageSvgCanvas } from "./StageSvgCanvas";
 
+type DragTarget =
+  | { kind: "member"; id: MemberId }
+  | { kind: "prop"; id: PropId };
+
 interface DragState {
-  memberId: MemberId;
+  target: DragTarget;
   clientX: number;
   clientY: number;
 }
@@ -19,6 +23,7 @@ export function PlacementEditorScreen() {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const groupRef = useRef<SVGGElement | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [selectedPropId, setSelectedPropId] = useState<PropId | null>(null);
 
   const displayNames = useMemo(
     () => resolveDisplayNames(state.roster.members),
@@ -57,12 +62,21 @@ export function PlacementEditorScreen() {
             e.clientX,
             e.clientY,
           );
-          dispatch({
-            type: "PLACE_MEMBER",
-            memberId: drag.memberId,
-            x_mm: mm(x_mm),
-            y_mm: mm(y_mm),
-          });
+          if (drag.target.kind === "member") {
+            dispatch({
+              type: "PLACE_MEMBER",
+              memberId: drag.target.id,
+              x_mm: mm(x_mm),
+              y_mm: mm(y_mm),
+            });
+          } else {
+            dispatch({
+              type: "MOVE_PROP",
+              propId: drag.target.id,
+              x_mm: mm(x_mm),
+              y_mm: mm(y_mm),
+            });
+          }
         }
       }
       setDrag(null);
@@ -76,11 +90,15 @@ export function PlacementEditorScreen() {
     };
     // drag.clientX/Yの更新のたびにリスナーを張り直さないよう、
     // 依存はドラッグの開始/終了(isDragging)だけにする。
-    // memberIdはドラッグ中に変わらないのでクロージャで固定して問題ない。
+    // targetはドラッグ中に変わらないのでクロージャで固定して問題ない。
   }, [isDragging]);
 
-  function startDrag(memberId: MemberId, e: ReactPointerEvent) {
-    setDrag({ memberId, clientX: e.clientX, clientY: e.clientY });
+  function startDragMember(memberId: MemberId, e: ReactPointerEvent) {
+    setDrag({ target: { kind: "member", id: memberId }, clientX: e.clientX, clientY: e.clientY });
+  }
+
+  function startDragProp(propId: PropId, e: ReactPointerEvent) {
+    setDrag({ target: { kind: "prop", id: propId }, clientX: e.clientX, clientY: e.clientY });
   }
 
   const dragPreviewMm =
@@ -88,15 +106,76 @@ export function PlacementEditorScreen() {
       ? clientPointToMm(svgRef.current, groupRef.current, drag.clientX, drag.clientY)
       : null;
 
+  const draggingMemberId =
+    drag?.target.kind === "member" ? drag.target.id : null;
+  const draggingPropId = drag?.target.kind === "prop" ? drag.target.id : null;
+
+  const selectedProp = state.stage.props.find((p) => p.id === selectedPropId) ?? null;
+
   return (
     <div style={{ display: "flex", height: "100%" }}>
-      <UnplacedMemberList
-        members={unplacedMembers}
-        parts={state.roster.parts}
-        displayNames={displayNames}
-        draggingMemberId={drag?.memberId ?? null}
-        onDragStart={startDrag}
-      />
+      <div style={{ width: 220, display: "flex", flexDirection: "column" }}>
+        <UnplacedMemberList
+          members={unplacedMembers}
+          parts={state.roster.parts}
+          displayNames={displayNames}
+          draggingMemberId={draggingMemberId}
+          onDragStart={startDragMember}
+        />
+        <div style={{ borderTop: "1px solid #ccc", padding: 8 }}>
+          <button onClick={() => dispatch({ type: "ADD_PROP", propType: "conductor" })}>
+            指揮者を追加
+          </button>
+          <button
+            onClick={() => dispatch({ type: "ADD_PROP", propType: "piano" })}
+            style={{ marginLeft: 4 }}
+          >
+            ピアノを追加
+          </button>
+
+          {selectedProp && (
+            <div style={{ marginTop: 8 }}>
+              <div>選択中: {selectedProp.label ?? selectedProp.type}</div>
+              {selectedProp.type === "piano" && (
+                <div>
+                  <button
+                    onClick={() =>
+                      dispatch({
+                        type: "ROTATE_PROP",
+                        propId: selectedProp.id,
+                        deltaDeg: -30,
+                      })
+                    }
+                  >
+                    左回り
+                  </button>
+                  <button
+                    onClick={() =>
+                      dispatch({
+                        type: "ROTATE_PROP",
+                        propId: selectedProp.id,
+                        deltaDeg: 30,
+                      })
+                    }
+                    style={{ marginLeft: 4 }}
+                  >
+                    右回り
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  dispatch({ type: "REMOVE_PROP", propId: selectedProp.id });
+                  setSelectedPropId(null);
+                }}
+                style={{ marginTop: 4 }}
+              >
+                削除
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
       <div style={{ flex: 1 }}>
         <StageSvgCanvas
           svgRef={svgRef}
@@ -107,9 +186,13 @@ export function PlacementEditorScreen() {
           parts={state.roster.parts}
           displayNames={displayNames}
           settings={state.settings}
-          draggingMemberId={drag?.memberId ?? null}
+          draggingMemberId={draggingMemberId}
           dragPreviewMm={dragPreviewMm}
-          onChipPointerDown={startDrag}
+          onChipPointerDown={startDragMember}
+          draggingPropId={draggingPropId}
+          selectedPropId={selectedPropId}
+          onPropPointerDown={startDragProp}
+          onPropClick={setSelectedPropId}
         />
       </div>
     </div>

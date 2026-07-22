@@ -1,8 +1,9 @@
 import type { Millimeter } from "../domain/units";
-import type { MemberId, PartId, TierId } from "../domain/ids";
+import type { MemberId, PartId, PropId, TierId } from "../domain/ids";
 import type { Member, Part } from "../domain/roster";
 import type { ParsedName } from "../domain/nameParsing";
 import type { BoardSize } from "../domain/boardCatalog";
+import type { PropType } from "../domain/stage";
 import type { Settings } from "./settings";
 import type { OutputInfo } from "./outputInfo";
 
@@ -43,4 +44,8 @@ export type DomainAction =
   | { type: "PLACE_MEMBER"; memberId: MemberId; x_mm: Millimeter; y_mm: Millimeter }
   | { type: "UNPLACE_MEMBER"; memberId: MemberId }
   | { type: "UPDATE_SETTINGS"; patch: Partial<Settings> }
-  | { type: "UPDATE_OUTPUT_INFO"; patch: Partial<OutputInfo> };
+  | { type: "UPDATE_OUTPUT_INFO"; patch: Partial<OutputInfo> }
+  | { type: "ADD_PROP"; propType: PropType }
+  | { type: "MOVE_PROP"; propId: PropId; x_mm: Millimeter; y_mm: Millimeter }
+  | { type: "ROTATE_PROP"; propId: PropId; deltaDeg: number }
+  | { type: "REMOVE_PROP"; propId: PropId };

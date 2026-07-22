@@ -1,7 +1,7 @@
 import type { DomainState } from "./domainState";
 import type { DomainAction } from "./domainActions";
 import { createMember, createPart } from "../domain/roster";
-import { createNextTier } from "../domain/stage";
+import { createNextTier, createProp } from "../domain/stage";
 import { createSegmentsFromBoard } from "../domain/boardCatalog";
 import { withoutPlacement } from "../domain/placement";
 
@@ -187,6 +187,52 @@ export function domainReducer(
       return {
         ...state,
         outputInfo: { ...state.outputInfo, ...action.patch },
+      };
+    }
+
+    case "ADD_PROP": {
+      const prop = createProp(action.propType);
+      return {
+        ...state,
+        stage: { ...state.stage, props: [...state.stage.props, prop] },
+      };
+    }
+
+    case "MOVE_PROP": {
+      return {
+        ...state,
+        stage: {
+          ...state.stage,
+          props: state.stage.props.map((p) =>
+            p.id === action.propId
+              ? { ...p, x_mm: action.x_mm, y_mm: action.y_mm }
+              : p,
+          ),
+        },
+      };
+    }
+
+    case "ROTATE_PROP": {
+      return {
+        ...state,
+        stage: {
+          ...state.stage,
+          props: state.stage.props.map((p) =>
+            p.id === action.propId
+              ? { ...p, angle_deg: (p.angle_deg + action.deltaDeg + 360) % 360 }
+              : p,
+          ),
+        },
+      };
+    }
+
+    case "REMOVE_PROP": {
+      return {
+        ...state,
+        stage: {
+          ...state.stage,
+          props: state.stage.props.filter((p) => p.id !== action.propId),
+        },
       };
     }
 

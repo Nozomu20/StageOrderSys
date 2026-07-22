@@ -3,9 +3,11 @@ import { useDomainDispatch, useDomainState } from "../../state/DomainStateContex
 import { resolveDisplayNames } from "../../domain/displayName";
 import { StageSvgCanvas } from "../placement/StageSvgCanvas";
 import { exportSvgToPngBlob } from "../../export/exportPng";
-import type { MemberId } from "../../domain/ids";
+import type { MemberId, PropId } from "../../domain/ids";
 
-const noop = (_memberId: MemberId, _e: ReactPointerEvent) => {};
+const noopMember = (_memberId: MemberId, _e: ReactPointerEvent) => {};
+const noopProp = (_propId: PropId, _e: ReactPointerEvent) => {};
+const noopSelect = (_propId: PropId) => {};
 
 export function OutputScreen() {
   const state = useDomainState();
@@ -108,7 +110,11 @@ export function OutputScreen() {
             settings={state.settings}
             draggingMemberId={null}
             dragPreviewMm={null}
-            onChipPointerDown={noop}
+            onChipPointerDown={noopMember}
+            draggingPropId={null}
+            selectedPropId={null}
+            onPropPointerDown={noopProp}
+            onPropClick={noopSelect}
           />
         </div>
       </div>

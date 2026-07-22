@@ -2,6 +2,18 @@ import { mm, type Millimeter } from "./units";
 import { createId, type PropId, type SegmentId, type TierId } from "./ids";
 import { BOARD_CATALOG, createSegmentsFromBoard } from "./boardCatalog";
 
+const DEFAULT_PROP_LABEL: Record<PropType, string> = {
+  conductor: "指揮",
+  piano: "ピアノ",
+};
+
+// 追加直後に重ならないよう、種類ごとに初期位置を少しずらす。
+// 床(客席寄り、y<0)の中に収まる位置を初期値とする。
+const DEFAULT_PROP_POSITION_MM: Record<PropType, { x_mm: number; y_mm: number }> = {
+  conductor: { x_mm: 0, y_mm: -300 },
+  piano: { x_mm: 900, y_mm: -500 },
+};
+
 export interface Segment {
   id: SegmentId;
   width_mm: Millimeter;
@@ -58,6 +70,18 @@ export function createNextTier(existingTiers: Tier[]): Tier {
     height_mm: mm(303),
     mode: "simple",
     segments: createSegmentsFromBoard(defaultBoard, 1),
+  };
+}
+
+export function createProp(type: PropType): Prop {
+  const position = DEFAULT_PROP_POSITION_MM[type];
+  return {
+    id: createId<"Prop">(),
+    type,
+    x_mm: mm(position.x_mm),
+    y_mm: mm(position.y_mm),
+    angle_deg: 0,
+    label: DEFAULT_PROP_LABEL[type],
   };
 }
 
