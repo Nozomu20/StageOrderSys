@@ -20,7 +20,7 @@ import { TierShapes } from "./TierShapes";
 import { ChipLayer, type ChipEntry } from "./ChipLayer";
 import { PropsLayer } from "./PropsLayer";
 import { AudienceSideLabel } from "./AudienceSideLabel";
-import { GuideLines } from "./GuideLines";
+import { GuideLines, SmartGuideLines } from "./GuideLines";
 
 // 2点間の距離がこの値未満なら「重なり」として警告する。
 function computeOverlappingMemberIds(
@@ -70,6 +70,8 @@ interface StageSvgCanvasProps {
   onBackgroundClick: () => void;
   onBackgroundPointerDown: (e: ReactPointerEvent) => void;
   viewportOverride: ViewBoxRect | null;
+  activeGuideX: number | null;
+  activeGuideY: number | null;
 }
 
 export function StageSvgCanvas({
@@ -93,6 +95,8 @@ export function StageSvgCanvas({
   onBackgroundClick,
   onBackgroundPointerDown,
   viewportOverride,
+  activeGuideX,
+  activeGuideY,
 }: StageSvgCanvasProps) {
   const colorByPartId = new Map(parts.map((p) => [p.id, p.color]));
 
@@ -185,6 +189,14 @@ export function StageSvgCanvas({
         />
         <TierShapes tiers={stage.tiers} />
         <GuideLines minY_mm={-FLOOR_DEPTH_MM} maxY_mm={baseBounds.maxY_mm} />
+        <SmartGuideLines
+          activeX_mm={activeGuideX}
+          activeY_mm={activeGuideY}
+          minX_mm={floorMinX_mm}
+          maxX_mm={floorMaxX_mm}
+          minY_mm={-FLOOR_DEPTH_MM}
+          maxY_mm={baseBounds.maxY_mm}
+        />
         <PropsLayer
           props={props}
           chipDiameter_mm={settings.chipDiameterMm}

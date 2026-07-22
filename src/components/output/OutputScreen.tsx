@@ -135,6 +135,8 @@ export function OutputScreen() {
             onBackgroundClick={() => {}}
             onBackgroundPointerDown={() => {}}
             viewportOverride={null}
+            activeGuideX={null}
+            activeGuideY={null}
           />
         </div>
       </div>

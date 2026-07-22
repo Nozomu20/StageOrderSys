@@ -9,6 +9,7 @@ import {
 import { useDomainDispatch, useDomainState } from "../../state/DomainStateContext";
 import { resolveDisplayNames } from "../../domain/displayName";
 import { clientPointToMm } from "../../coords/pointerToMm";
+import { computeGuideCandidates, applySnapping } from "../../coords/smartGuides";
 import { mm } from "../../domain/units";
 import type { MemberId, PropId } from "../../domain/ids";
 import type { ViewBoxRect } from "../../coords/viewBox";
@@ -37,6 +38,9 @@ const PAN_MOVE_THRESHOLD_PX = 3;
 const ZOOM_MIN_PERCENT = 25;
 const ZOOM_MAX_PERCENT = 300;
 const ZOOM_DEFAULT_PERCENT = 100;
+// スマートガイドが反応する画面上のしきい値(px)。ズームに関わらず
+// 見た目の感度が一定になるよう、その都度mm換算して使う。
+const SMART_GUIDE_THRESHOLD_PX = 8;
 
 export function PlacementEditorScreen() {
   const state = useDomainState();
@@ -75,6 +79,33 @@ export function PlacementEditorScreen() {
 
   const isDragging = drag !== null;
 
+  const draggingMemberId =
+    drag?.target.kind === "member" ? drag.target.id : null;
+  const draggingPropId = drag?.target.kind === "prop" ? drag.target.id : null;
+
+  // スマートガイドの候補(他の団員コマ・段の境界・中心線)。ドラッグ中の
+  // コマ自身は除外する。ドラッグ中はstage/placementsが変わらないため、
+  // ドラッグ対象が変わったときだけ計算し直せば十分。
+  const guideCandidates = useMemo(
+    () => computeGuideCandidates(state.stage, state.placements, draggingMemberId),
+    [state.stage, state.placements, draggingMemberId],
+  );
+
+  // 生のポインタ位置に対して、スマートガイドとグリッド吸着の両方を
+  // 加味した最終位置を求める。ドラッグ中のプレビュー表示とドロップ時の
+  // 確定位置とで同じ関数を使うことで、見た目と実際の配置がずれないようにする。
+  function computeSnappedPosition(clientX: number, clientY: number) {
+    const svg = svgRef.current;
+    const group = groupRef.current;
+    if (!svg || !group) return null;
+    const raw = clientPointToMm(svg, group, clientX, clientY);
+    const ctm = group.getScreenCTM();
+    const pxPerMm = ctm ? Math.abs(ctm.a) : 1;
+    const guideThreshold_mm = SMART_GUIDE_THRESHOLD_PX / (pxPerMm || 1);
+    const gridIntervalMm = snapEnabled ? state.settings.snapIntervalMm : null;
+    return applySnapping(raw, guideCandidates, guideThreshold_mm, gridIntervalMm);
+  }
+
   useEffect(() => {
     if (!drag) return;
 
@@ -86,8 +117,7 @@ export function PlacementEditorScreen() {
 
     function handleUp(e: PointerEvent) {
       const svg = svgRef.current;
-      const group = groupRef.current;
-      if (svg && group && drag) {
+      if (svg && drag) {
         const rect = svg.getBoundingClientRect();
         const isInsideCanvas =
           e.clientX >= rect.left &&
@@ -95,26 +125,23 @@ export function PlacementEditorScreen() {
           e.clientY >= rect.top &&
           e.clientY <= rect.bottom;
         if (isInsideCanvas) {
-          const rawMm = clientPointToMm(svg, group, e.clientX, e.clientY);
-          const interval = state.settings.snapIntervalMm;
-          const snap = (v: number) =>
-            snapEnabled ? Math.round(v / interval) * interval : v;
-          const x_mm = snap(rawMm.x_mm);
-          const y_mm = snap(rawMm.y_mm);
-          if (drag.target.kind === "member") {
-            dispatch({
-              type: "PLACE_MEMBER",
-              memberId: drag.target.id,
-              x_mm: mm(x_mm),
-              y_mm: mm(y_mm),
-            });
-          } else {
-            dispatch({
-              type: "MOVE_PROP",
-              propId: drag.target.id,
-              x_mm: mm(x_mm),
-              y_mm: mm(y_mm),
-            });
+          const snapped = computeSnappedPosition(e.clientX, e.clientY);
+          if (snapped) {
+            if (drag.target.kind === "member") {
+              dispatch({
+                type: "PLACE_MEMBER",
+                memberId: drag.target.id,
+                x_mm: mm(snapped.x_mm),
+                y_mm: mm(snapped.y_mm),
+              });
+            } else {
+              dispatch({
+                type: "MOVE_PROP",
+                propId: drag.target.id,
+                x_mm: mm(snapped.x_mm),
+                y_mm: mm(snapped.y_mm),
+              });
+            }
           }
         }
       }
@@ -281,14 +308,12 @@ export function PlacementEditorScreen() {
     });
   }
 
-  const dragPreviewMm =
-    drag && svgRef.current && groupRef.current
-      ? clientPointToMm(svgRef.current, groupRef.current, drag.clientX, drag.clientY)
-      : null;
-
-  const draggingMemberId =
-    drag?.target.kind === "member" ? drag.target.id : null;
-  const draggingPropId = drag?.target.kind === "prop" ? drag.target.id : null;
+  const liveSnap = drag ? computeSnappedPosition(drag.clientX, drag.clientY) : null;
+  const dragPreviewMm = liveSnap
+    ? { x_mm: liveSnap.x_mm, y_mm: liveSnap.y_mm }
+    : null;
+  const activeGuideX = liveSnap?.activeGuideX ?? null;
+  const activeGuideY = liveSnap?.activeGuideY ?? null;
 
   const selectedProp = state.stage.props.find((p) => p.id === selectedPropId) ?? null;
 
@@ -445,6 +470,8 @@ export function PlacementEditorScreen() {
           onBackgroundClick={handleBackgroundClick}
           onBackgroundPointerDown={startPan}
           viewportOverride={viewportOverride}
+          activeGuideX={activeGuideX}
+          activeGuideY={activeGuideY}
         />
       </div>
     </div>
