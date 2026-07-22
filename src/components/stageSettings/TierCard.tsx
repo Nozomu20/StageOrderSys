@@ -34,8 +34,8 @@ function findMatchingHeightChoice(height_mm: number): string {
 }
 
 // 段=1種類の板を何枚か横に並べたもの、という入力モデル。
-// プルダウンで板を選び、枚数を入力して「反映」でまとめてdispatchする
-// (将来Undo/Redoを入れたときの履歴単位を1操作にするため)。
+// プルダウンの変更は即時、枚数・自由入力欄は入力を離れたタイミングで
+// 反映する(キー入力のたびにdispatchして履歴が荒れるのを避けるため)。
 export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
   const dispatch = useDomainDispatch();
   const seg = tier.segments[0];
@@ -71,14 +71,20 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
     setCustomSun(shakuSun.sun.toFixed(1));
   }, [tier.height_mm]);
 
-  const selectedBoard = BOARD_CATALOG.find((b) => b.id === boardId);
-
-  function applyBoard() {
-    const resolvedCount = Number(count);
+  // 引数で明示的に値を受け取る(stateの更新が反映される前に呼ばれても
+  // 古い値を参照しないようにするため)。
+  function applyBoard(
+    nextBoardId: string,
+    nextCount: string,
+    nextCustomWidth: string,
+    nextCustomDepth: string,
+  ) {
+    const resolvedCount = Number(nextCount);
     if (!Number.isFinite(resolvedCount) || resolvedCount <= 0) return;
 
-    const width_mm = selectedBoard ? selectedBoard.width_mm : Number(customWidth);
-    const depth_mm = selectedBoard ? selectedBoard.depth_mm : Number(customDepth);
+    const board = BOARD_CATALOG.find((b) => b.id === nextBoardId);
+    const width_mm = board ? board.width_mm : Number(nextCustomWidth);
+    const depth_mm = board ? board.depth_mm : Number(nextCustomDepth);
     if (!Number.isFinite(width_mm) || width_mm <= 0) return;
     if (!Number.isFinite(depth_mm) || depth_mm <= 0) return;
 
@@ -101,11 +107,16 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
     }
   }
 
-  function applyCustomHeight() {
+  function applyCustomHeight(
+    unit: "mm" | "shakusun",
+    nextMm: string,
+    nextShaku: string,
+    nextSun: string,
+  ) {
     const height_mm =
-      heightUnit === "mm"
-        ? Number(customHeightMm)
-        : shakuSunToMm(Number(customShaku) || 0, Number(customSun) || 0);
+      unit === "mm"
+        ? Number(nextMm)
+        : shakuSunToMm(Number(nextShaku) || 0, Number(nextSun) || 0);
     if (!Number.isFinite(height_mm) || height_mm < 0) return;
     dispatch({
       type: "SET_TIER_HEIGHT",
@@ -157,7 +168,13 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
 
       <div className="field-row">
         <span className="field-label">段の板</span>
-        <select value={boardId} onChange={(e) => setBoardId(e.target.value)}>
+        <select
+          value={boardId}
+          onChange={(e) => {
+            setBoardId(e.target.value);
+            applyBoard(e.target.value, count, customWidth, customDepth);
+          }}
+        >
           {BOARD_CATALOG.map((b) => (
             <option key={b.id} value={b.id}>
               {b.label}
@@ -172,6 +189,9 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
               type="number"
               value={customWidth}
               onChange={(e) => setCustomWidth(e.target.value)}
+              onBlur={() =>
+                applyBoard(boardId, count, customWidth, customDepth)
+              }
               style={{ width: 70 }}
             />
             <span>mm × 奥行</span>
@@ -179,6 +199,9 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
               type="number"
               value={customDepth}
               onChange={(e) => setCustomDepth(e.target.value)}
+              onBlur={() =>
+                applyBoard(boardId, count, customWidth, customDepth)
+              }
               style={{ width: 70 }}
             />
             <span>mm</span>
@@ -193,12 +216,10 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
           min={1}
           value={count}
           onChange={(e) => setCount(e.target.value)}
+          onBlur={() => applyBoard(boardId, count, customWidth, customDepth)}
           style={{ width: 60 }}
         />
         <span>枚</span>
-        <button className="btn-small" onClick={applyBoard}>
-          反映
-        </button>
       </div>
 
       <div className="field-row" style={{ marginBottom: 0 }}>
@@ -230,6 +251,9 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
                 type="number"
                 value={customHeightMm}
                 onChange={(e) => setCustomHeightMm(e.target.value)}
+                onBlur={() =>
+                  applyCustomHeight("mm", customHeightMm, customShaku, customSun)
+                }
                 style={{ width: 90 }}
               />
             ) : (
@@ -238,6 +262,14 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
                   type="number"
                   value={customShaku}
                   onChange={(e) => setCustomShaku(e.target.value)}
+                  onBlur={() =>
+                    applyCustomHeight(
+                      "shakusun",
+                      customHeightMm,
+                      customShaku,
+                      customSun,
+                    )
+                  }
                   style={{ width: 50 }}
                 />
                 <span>尺</span>
@@ -245,14 +277,19 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
                   type="number"
                   value={customSun}
                   onChange={(e) => setCustomSun(e.target.value)}
+                  onBlur={() =>
+                    applyCustomHeight(
+                      "shakusun",
+                      customHeightMm,
+                      customShaku,
+                      customSun,
+                    )
+                  }
                   style={{ width: 50 }}
                 />
                 <span>寸</span>
               </>
             )}
-            <button className="btn-small" onClick={applyCustomHeight}>
-              反映
-            </button>
           </>
         )}
       </div>

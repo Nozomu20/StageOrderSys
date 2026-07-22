@@ -33,13 +33,10 @@ interface PanStart {
   ctmD: number;
 }
 
-const MIN_VIEW_WIDTH_MM = 300;
-const MAX_VIEW_WIDTH_MM = 60000;
 const PAN_MOVE_THRESHOLD_PX = 3;
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
+const ZOOM_MIN_PERCENT = 25;
+const ZOOM_MAX_PERCENT = 300;
+const ZOOM_DEFAULT_PERCENT = 100;
 
 export function PlacementEditorScreen() {
   const state = useDomainState();
@@ -58,6 +55,14 @@ export function PlacementEditorScreen() {
   const [isPanning, setIsPanning] = useState(false);
   const panRef = useRef<PanStart | null>(null);
   const didPanMoveRef = useRef(false);
+  const [zoomPercent, setZoomPercent] = useState(ZOOM_DEFAULT_PERCENT);
+  // ズームスライダーの「100%」の基準となる大きさ(自動フィット時の実測値)。
+  // 最初にスライダーを動かした時点の値を固定して使う。中心位置は
+  // 常にそのつどのviewBoxから読むため、パンした位置はズームで
+  // リセットされない。
+  const zoomBaseSizeRef = useRef<{ width: number; height: number } | null>(
+    null,
+  );
 
   const displayNames = useMemo(
     () => resolveDisplayNames(state.roster.members),
@@ -166,49 +171,40 @@ export function PlacementEditorScreen() {
     };
   }, [isPanning]);
 
-  // ホイールでのズーム。カーソル位置のmm座標が画面上で動かないよう、
-  // 現在のviewBoxとCTMから逆算する。preventDefault()のため
-  // Reactの合成イベント(受動的リスナー)ではなくネイティブリスナーを使う。
-  // 注: viewBoxはSVG要素自身のローカル空間(Y反転前)の値なので、
-  // 変換にはgroupではなくsvg自身のCTMを使う(groupのCTMを使うとY軸の
-  // 反転分だけ符号がずれ、パン・ズームの向きが逆になる)。
-  useEffect(() => {
+  // ズームスライダー。トラックパッドのジェスチャー(ホイール)には
+  // 依存せず、スライダーの値だけでviewBoxを決める。
+  // 初回操作時の自動フィットのviewBoxを基準(100%)として固定し、
+  // その基準に対する拡大率でwidth/heightを再計算する。
+  function applyZoom(percent: number) {
+    setZoomPercent(percent);
     const svg = svgRef.current;
     if (!svg) return;
+    const vbNow = svg.viewBox.baseVal;
 
-    function handleWheel(e: WheelEvent) {
-      if (!svg) return;
-      e.preventDefault();
-      const ctm = svg.getScreenCTM();
-      if (!ctm) return;
-      const vb = svg.viewBox.baseVal;
-      const point = svg.createSVGPoint();
-      point.x = e.clientX;
-      point.y = e.clientY;
-      const cursor = point.matrixTransform(ctm.inverse());
-
-      const factor = e.deltaY > 0 ? 1.1 : 1 / 1.1;
-      const newWidth = clamp(
-        vb.width * factor,
-        MIN_VIEW_WIDTH_MM,
-        MAX_VIEW_WIDTH_MM,
-      );
-      const scaleRatio = newWidth / vb.width;
-      const newHeight = vb.height * scaleRatio;
-      const normX = (cursor.x - vb.x) / vb.width;
-      const normY = (cursor.y - vb.y) / vb.height;
-
-      setViewportOverride({
-        x: cursor.x - normX * newWidth,
-        y: cursor.y - normY * newHeight,
-        width: newWidth,
-        height: newHeight,
-      });
+    if (!zoomBaseSizeRef.current) {
+      zoomBaseSizeRef.current = { width: vbNow.width, height: vbNow.height };
     }
+    const base = zoomBaseSizeRef.current;
+    const scaleRatio = ZOOM_DEFAULT_PERCENT / percent;
+    const newWidth = base.width * scaleRatio;
+    const newHeight = base.height * scaleRatio;
+    // 中心は現在表示中の範囲から求める(パンした位置を維持するため)。
+    const centerX = vbNow.x + vbNow.width / 2;
+    const centerY = vbNow.y + vbNow.height / 2;
 
-    svg.addEventListener("wheel", handleWheel, { passive: false });
-    return () => svg.removeEventListener("wheel", handleWheel);
-  }, []);
+    setViewportOverride({
+      x: centerX - newWidth / 2,
+      y: centerY - newHeight / 2,
+      width: newWidth,
+      height: newHeight,
+    });
+  }
+
+  function resetView() {
+    setViewportOverride(null);
+    setZoomPercent(ZOOM_DEFAULT_PERCENT);
+    zoomBaseSizeRef.current = null;
+  }
 
   function startPan(e: ReactPointerEvent) {
     const svg = svgRef.current;
@@ -309,6 +305,23 @@ export function PlacementEditorScreen() {
 
         <div className="sidebar-section">
           <div className="sidebar-section-title">表示</div>
+
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+              <span>ズーム</span>
+              <span>{zoomPercent}%</span>
+            </div>
+            <input
+              type="range"
+              min={ZOOM_MIN_PERCENT}
+              max={ZOOM_MAX_PERCENT}
+              step={5}
+              value={zoomPercent}
+              onChange={(e) => applyZoom(Number(e.target.value))}
+              style={{ width: "100%" }}
+            />
+          </div>
+
           <label
             style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}
           >
@@ -319,11 +332,7 @@ export function PlacementEditorScreen() {
             />
             グリッド吸着({state.settings.snapIntervalMm}mm間隔)
           </label>
-          <button
-            className="btn-small"
-            style={{ marginTop: 8 }}
-            onClick={() => setViewportOverride(null)}
-          >
+          <button className="btn-small" style={{ marginTop: 8 }} onClick={resetView}>
             表示をリセット
           </button>
         </div>

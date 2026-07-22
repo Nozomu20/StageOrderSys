@@ -62,8 +62,8 @@ export function createNextTier(existingTiers: Tier[]): Tier {
     existingTiers.length === 0
       ? 0
       : Math.max(...existingTiers.map((t) => t.order)) + 1;
-  // 初期値として幅6尺奥行6尺の板を1枚だけ置いておく。UIから変更する前提。
-  const defaultBoard = BOARD_CATALOG[BOARD_CATALOG.length - 1];
+  // 初期値として幅6尺奥行3尺の板を1枚だけ置いておく。UIから変更する前提。
+  const defaultBoard = BOARD_CATALOG[0];
   return {
     id: createId<"Tier">(),
     order,
