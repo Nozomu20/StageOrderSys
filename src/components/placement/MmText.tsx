@@ -15,7 +15,13 @@ export function MmText({ x_mm, y_mm, fontSize_mm, children }: MmTextProps) {
         textAnchor="middle"
         dominantBaseline="middle"
         fontSize={fontSize_mm}
-        style={{ pointerEvents: "none", userSelect: "none" }}
+        style={{
+          pointerEvents: "none",
+          userSelect: "none",
+          // PNG書き出し時はSVGを単体で(ページのCSSなしに)ラスタライズするため、
+          // 外部スタイル頼みにせずフォントをここで明示しておく。
+          fontFamily: "sans-serif",
+        }}
       >
         {children}
       </text>

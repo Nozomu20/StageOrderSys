@@ -183,6 +183,13 @@ export function domainReducer(
       return { ...state, settings: { ...state.settings, ...action.patch } };
     }
 
+    case "UPDATE_OUTPUT_INFO": {
+      return {
+        ...state,
+        outputInfo: { ...state.outputInfo, ...action.patch },
+      };
+    }
+
     default: {
       const exhaustiveCheck: never = action;
       return exhaustiveCheck;

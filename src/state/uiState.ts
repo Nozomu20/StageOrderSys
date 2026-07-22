@@ -1,4 +1,8 @@
-export type ScreenTab = "stageSettings" | "roster" | "placementEditor";
+export type ScreenTab =
+  | "stageSettings"
+  | "roster"
+  | "placementEditor"
+  | "output";
 
 // Undo/Redoの対象にしないUIだけの状態。domain stateとは別枠で管理する。
 export interface UIState {

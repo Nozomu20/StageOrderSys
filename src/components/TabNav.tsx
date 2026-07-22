@@ -5,6 +5,7 @@ const TABS: { tab: ScreenTab; label: string }[] = [
   { tab: "stageSettings", label: "ステージ設定" },
   { tab: "roster", label: "団員登録" },
   { tab: "placementEditor", label: "配置エディタ" },
+  { tab: "output", label: "出力" },
 ];
 
 export function TabNav() {

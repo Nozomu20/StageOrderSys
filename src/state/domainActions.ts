@@ -4,6 +4,7 @@ import type { Member, Part } from "../domain/roster";
 import type { ParsedName } from "../domain/nameParsing";
 import type { BoardSize } from "../domain/boardCatalog";
 import type { Settings } from "./settings";
+import type { OutputInfo } from "./outputInfo";
 
 // domain state を変更する操作は、すべてこのunion型を通してdispatchする。
 // 1アクション=1つの意味のある操作、という単位を守ること。
@@ -41,4 +42,5 @@ export type DomainAction =
   | { type: "REMOVE_MEMBER"; memberId: MemberId }
   | { type: "PLACE_MEMBER"; memberId: MemberId; x_mm: Millimeter; y_mm: Millimeter }
   | { type: "UNPLACE_MEMBER"; memberId: MemberId }
-  | { type: "UPDATE_SETTINGS"; patch: Partial<Settings> };
+  | { type: "UPDATE_SETTINGS"; patch: Partial<Settings> }
+  | { type: "UPDATE_OUTPUT_INFO"; patch: Partial<OutputInfo> };
