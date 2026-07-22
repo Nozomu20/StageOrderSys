@@ -2,6 +2,7 @@ import type { Millimeter } from "../domain/units";
 import type { MemberId, PartId, TierId } from "../domain/ids";
 import type { Member, Part } from "../domain/roster";
 import type { ParsedName } from "../domain/nameParsing";
+import type { BoardSize } from "../domain/boardCatalog";
 import type { Settings } from "./settings";
 
 // domain state を変更する操作は、すべてこのunion型を通してdispatchする。
@@ -12,10 +13,10 @@ export type DomainAction =
   | { type: "REMOVE_TIER"; tierId: TierId }
   | { type: "MOVE_TIER"; tierId: TierId; direction: "up" | "down" }
   | {
-      type: "SET_TIER_SIMPLE_SIZE";
+      type: "SET_TIER_BOARD";
       tierId: TierId;
-      width_mm: Millimeter;
-      depth_mm: Millimeter;
+      board: BoardSize;
+      count: number;
     }
   | { type: "SET_TIER_HEIGHT"; tierId: TierId; height_mm: Millimeter }
   | { type: "ADD_PART"; name: string; color: string }

@@ -31,7 +31,7 @@ export function TierShapes({ tiers }: TierShapesProps) {
           y_mm={yStart_mm + 60}
           fontSize_mm={80}
         >
-          {tier.order === 0 ? "床" : `${tier.order}段目`}
+          {`${tier.order + 1}段目`}
         </MmText>
       ))}
     </>

@@ -13,7 +13,11 @@ import { TierShapes } from "./TierShapes";
 import { ChipLayer, type ChipEntry } from "./ChipLayer";
 import { AudienceSideLabel } from "./AudienceSideLabel";
 
-const AUDIENCE_LABEL_Y_MM = -400;
+// 床(段以外のステージスペース)の描画量。実測値ではなく見た目上の目安。
+const FLOOR_DEPTH_MM = 1500;
+// 段が1つもない場合でも床が見える最小幅。
+const FLOOR_FALLBACK_WIDTH_MM = 1818;
+const AUDIENCE_LABEL_Y_MM = -FLOOR_DEPTH_MM / 2;
 
 interface StageSvgCanvasProps {
   svgRef: RefObject<SVGSVGElement | null>;
@@ -63,17 +67,29 @@ export function StageSvgCanvas({
     });
 
   const baseBounds = computeStageBounds(stage.tiers);
-  const boundsWithChips = expandBoundsWithPoints(
+  const floorWidth_mm = Math.max(
+    baseBounds.maxX_mm - baseBounds.minX_mm,
+    FLOOR_FALLBACK_WIDTH_MM,
+  );
+  const floorMinX_mm =
+    stage.tiers.length > 0 ? baseBounds.minX_mm : -floorWidth_mm / 2;
+  const floorMaxX_mm =
+    stage.tiers.length > 0 ? baseBounds.maxX_mm : floorWidth_mm / 2;
+
+  const boundsWithFloor = expandBoundsWithPoints(
     baseBounds,
+    [
+      { x_mm: floorMinX_mm, y_mm: -FLOOR_DEPTH_MM },
+      { x_mm: floorMaxX_mm, y_mm: -FLOOR_DEPTH_MM },
+    ],
+    0,
+  );
+  const boundsWithChips = expandBoundsWithPoints(
+    boundsWithFloor,
     chips.map((c) => ({ x_mm: c.x_mm, y_mm: c.y_mm })),
     settings.chipDiameterMm / 2 + 50,
   );
-  const boundsWithAudience = expandBoundsWithPoints(
-    boundsWithChips,
-    [{ x_mm: 0, y_mm: AUDIENCE_LABEL_Y_MM }],
-    100,
-  );
-  const viewBox = computeViewBox(boundsWithAudience, 200);
+  const viewBox = computeViewBox(boundsWithChips, 200);
 
   return (
     <svg
@@ -82,6 +98,15 @@ export function StageSvgCanvas({
       style={{ width: "100%", height: "100%", background: "#fff", touchAction: "none" }}
     >
       <g ref={groupRef} transform="scale(1, -1)">
+        <rect
+          x={floorMinX_mm}
+          y={-FLOOR_DEPTH_MM}
+          width={floorMaxX_mm - floorMinX_mm}
+          height={FLOOR_DEPTH_MM}
+          fill="#f7f7f7"
+          stroke="#ccc"
+          strokeWidth={5}
+        />
         <TierShapes tiers={stage.tiers} />
         <ChipLayer
           chips={chips}
@@ -89,7 +114,7 @@ export function StageSvgCanvas({
           fontSize_mm={settings.fontSizeMm}
           onChipPointerDown={onChipPointerDown}
         />
-        <AudienceSideLabel y_mm={AUDIENCE_LABEL_Y_MM + 150} />
+        <AudienceSideLabel y_mm={AUDIENCE_LABEL_Y_MM} />
       </g>
     </svg>
   );

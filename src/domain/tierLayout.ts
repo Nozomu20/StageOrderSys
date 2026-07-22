@@ -25,14 +25,8 @@ export function computeTierRanges(tiers: Tier[]): TierRange[] {
 }
 
 // Placementのy座標から、その人がどの段に立っているかを逆算する。
-// 段の奥行き範囲からはみ出す配置(未決事項)は、現時点では許容し、
-// 最も近い段にフォールバックする。
+// どの段の範囲にも入らない場合(床、または最後尾の段より奥)はundefinedを返す。
 export function findTierAt(y_mm: number, tiers: Tier[]): Tier | undefined {
   const ranges = computeTierRanges(tiers);
-  const hit = ranges.find((r) => y_mm >= r.yStart_mm && y_mm < r.yEnd_mm);
-  if (hit) return hit.tier;
-  if (ranges.length === 0) return undefined;
-  return y_mm < ranges[0].yStart_mm
-    ? ranges[0].tier
-    : ranges[ranges.length - 1].tier;
+  return ranges.find((r) => y_mm >= r.yStart_mm && y_mm < r.yEnd_mm)?.tier;
 }

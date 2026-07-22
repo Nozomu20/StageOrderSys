@@ -2,6 +2,7 @@ import type { DomainState } from "./domainState";
 import type { DomainAction } from "./domainActions";
 import { createMember, createPart } from "../domain/roster";
 import { createNextTier } from "../domain/stage";
+import { createSegmentsFromBoard } from "../domain/boardCatalog";
 import { withoutPlacement } from "../domain/placement";
 
 // 純粋関数として保つこと。副作用・直接mutationは行わない。
@@ -45,7 +46,7 @@ export function domainReducer(
       return { ...state, stage: { ...state.stage, tiers: updated } };
     }
 
-    case "SET_TIER_SIMPLE_SIZE": {
+    case "SET_TIER_BOARD": {
       return {
         ...state,
         stage: {
@@ -54,15 +55,7 @@ export function domainReducer(
             t.id === action.tierId
               ? {
                   ...t,
-                  segments: t.segments.map((s, i) =>
-                    i === 0
-                      ? {
-                          ...s,
-                          width_mm: action.width_mm,
-                          depth_mm: action.depth_mm,
-                        }
-                      : s,
-                  ),
+                  segments: createSegmentsFromBoard(action.board, action.count),
                 }
               : t,
           ),
@@ -76,7 +69,7 @@ export function domainReducer(
         stage: {
           ...state.stage,
           tiers: state.stage.tiers.map((t) =>
-            t.id === action.tierId && t.order !== 0
+            t.id === action.tierId
               ? { ...t, height_mm: action.height_mm }
               : t,
           ),
