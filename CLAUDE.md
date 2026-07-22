@@ -39,8 +39,18 @@
   - `src/state/`: domain state用の単一reducer(`domainReducer.ts`)。UI状態(タブ・選択・ドラッグ中の一時座標)はdomain stateと分離し、Undo/Redoの対象に含めない設計
   - `src/coords/`: SVGのuser space自体をmm相当として扱い、Y軸反転はSVGルート直下の`<g transform="scale(1,-1)">`一箇所に集約。ポインタ→mm変換は`pointerToMm.ts`にのみ存在
   - 画面: ステージ設定(段のsimpleモードのみ)・団員登録(一括貼り付け・パート管理・表示名プレビュー)・配置エディタ(未配置一覧からのドラッグ配置、既存コマの再ドラッグ)
-- 未実装(意図的にスコープ外。第2段階以降): ズーム/パン、整列・グリッド吸着、重なり警告、Undo/Redo本体
+- 未実装(意図的にスコープ外。SHOULD/COULD): sessionStorageへの自動退避、左右反転(ミラー)、パートごとの人数カウント表示、名簿の並べ替え、段のadvancedモード(扇形)、Undo/Redo本体(設計上の下地はあるが履歴管理自体は未着手)
 - PNG/PDF出力を実装済み(「出力」タブ)。タイトル・日付・団体名を入力してPNGダウンロード(1〜3倍)とA4横印刷に対応。印刷CSSは`flex:1`だとページ計算とSVGの縦横比が絡んで複数ページに分割されるバグがあったため、`.print-stage`の高さは固定mm値にしている
+- 配置エディタの支援機能をひととおり実装済み:
+  - 団員の個別追加フォーム(`AddMemberForm.tsx`、一括貼り付けとは別)
+  - コマの選択・shift+クリックでの複数選択・「未配置に戻す」(`UNPLACE_MEMBERS`)・「横一列に整列」(`ALIGN_MEMBERS_ROW`、選択メンバーの平均Y・平均X中心に`personSpacingMm`間隔で並べ替え)
+  - コマの重なり警告(`personSpacingMm`未満の距離のペアに赤い破線リングを表示。`StageSvgCanvas`内で都度計算)
+  - 中心線ガイド(`GuideLines.tsx`)。段の境界は各段の矩形の枠線で表現済みのため追加のガイドは無し
+  - グリッド吸着(ON/OFFは配置エディタのローカルUI状態、間隔は`settings.snapIntervalMm`としてSettings画面から変更可能)
+  - ズーム(ホイール、カーソル位置を中心に)/パン(背景ドラッグ)。`viewportOverride`(SVGのviewBox 4値)をPlacementEditorScreenのローカル状態として持ち、一度操作すると自動フィットから独立する。「表示をリセット」ボタンで解除
+    - **ハマった点**: パン/ズームでSVGのviewBox(SVG要素自身のローカル空間)を直接書き換える処理は、`group`(`<g transform="scale(1,-1)">`)のCTMではなく**SVG要素自身**のCTM(`svg.getScreenCTM()`)を使うこと。groupのCTMはドメインmm座標(Y反転前)→画面の変換であり、viewBoxはY反転後(SVG自身のローカル)空間の値なので、groupのCTMを使うとY軸だけ符号が反転し、パン・ズームの向きが逆になる
+- 新しい「設定」タブを追加(`SettingsScreen.tsx`)。占有幅・コマ直径・文字サイズ・グリッド吸着間隔をUIから変更できる
+- 段の高さをプリセット(5寸/7寸/1尺/1尺5寸/2尺、`heightPresets.ts`)+その他自由入力(mm/尺寸切り替え、`shakuSunToMm`/`mmToShakuSun`)で選べるようにし、「全段を同じ高さに設定」の一括ボタンも追加。`TierCard`はuseEffectで`tier.height_mm`の外部変化(一括設定など)に表示を同期させている
 - Prop(指揮者・ピアノ)の配置を実装済み。指揮者は団員コマと同じ丸(固定色+「指揮」ラベル)、ピアノは簡略化したグランドピアノの上面形(`PropsLayer.tsx`の`PIANO_PATH`、要件定義8章の未決事項につき正確な形ではなく模式図)。「指揮者を追加」「ピアノを追加」ボタンで追加し、団員コマと同じドラッグ機構で移動、選択中はピアノのみ回転ボタン(±30度)を表示。指揮者台の有無の切り替えは今回見送り(SHOULD相当のため)
 - 決定事項の補足:
   - 段のY方向位置は「前の段の奥行きの累積」で自動決定(`computeTierRanges`)

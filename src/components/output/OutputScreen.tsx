@@ -1,4 +1,9 @@
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { useDomainDispatch, useDomainState } from "../../state/DomainStateContext";
 import { resolveDisplayNames } from "../../domain/displayName";
 import { StageSvgCanvas } from "../placement/StageSvgCanvas";
@@ -6,8 +11,10 @@ import { exportSvgToPngBlob } from "../../export/exportPng";
 import type { MemberId, PropId } from "../../domain/ids";
 
 const noopMember = (_memberId: MemberId, _e: ReactPointerEvent) => {};
+const noopMemberClick = (_memberId: MemberId, _e: ReactMouseEvent) => {};
 const noopProp = (_propId: PropId, _e: ReactPointerEvent) => {};
 const noopSelect = (_propId: PropId) => {};
+const EMPTY_SELECTION: ReadonlySet<MemberId> = new Set();
 
 export function OutputScreen() {
   const state = useDomainState();
@@ -111,10 +118,15 @@ export function OutputScreen() {
             draggingMemberId={null}
             dragPreviewMm={null}
             onChipPointerDown={noopMember}
+            selectedMemberIds={EMPTY_SELECTION}
+            onChipClick={noopMemberClick}
             draggingPropId={null}
             selectedPropId={null}
             onPropPointerDown={noopProp}
             onPropClick={noopSelect}
+            onBackgroundClick={() => {}}
+            onBackgroundPointerDown={() => {}}
+            viewportOverride={null}
           />
         </div>
       </div>

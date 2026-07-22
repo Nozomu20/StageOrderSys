@@ -5,6 +5,7 @@ import { StageSettingsScreen } from "./stageSettings/StageSettingsScreen";
 import { RosterScreen } from "./roster/RosterScreen";
 import { PlacementEditorScreen } from "./placement/PlacementEditorScreen";
 import { OutputScreen } from "./output/OutputScreen";
+import { SettingsScreen } from "./settings/SettingsScreen";
 
 function Screens() {
   const { uiState } = useUIState();
@@ -17,6 +18,8 @@ function Screens() {
       return <PlacementEditorScreen />;
     case "output":
       return <OutputScreen />;
+    case "settings":
+      return <SettingsScreen />;
   }
 }
 

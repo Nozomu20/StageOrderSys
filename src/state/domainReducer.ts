@@ -4,6 +4,7 @@ import { createMember, createPart } from "../domain/roster";
 import { createNextTier, createProp } from "../domain/stage";
 import { createSegmentsFromBoard } from "../domain/boardCatalog";
 import { withoutPlacement } from "../domain/placement";
+import { mm } from "../domain/units";
 
 // 純粋関数として保つこと。副作用・直接mutationは行わない。
 // (将来Undo/Redoの履歴管理でこのreducerをラップする前提)
@@ -73,6 +74,19 @@ export function domainReducer(
               ? { ...t, height_mm: action.height_mm }
               : t,
           ),
+        },
+      };
+    }
+
+    case "SET_ALL_TIER_HEIGHTS": {
+      return {
+        ...state,
+        stage: {
+          ...state.stage,
+          tiers: state.stage.tiers.map((t) => ({
+            ...t,
+            height_mm: action.height_mm,
+          })),
         },
       };
     }
@@ -177,6 +191,39 @@ export function domainReducer(
         ...state,
         placements: withoutPlacement(state.placements, action.memberId),
       };
+    }
+
+    case "UNPLACE_MEMBERS": {
+      const placements = action.memberIds.reduce(
+        (acc, memberId) => withoutPlacement(acc, memberId),
+        state.placements,
+      );
+      return { ...state, placements };
+    }
+
+    case "ALIGN_MEMBERS_ROW": {
+      const targets = action.memberIds
+        .map((id) => state.placements[id])
+        .filter((p): p is NonNullable<typeof p> => p !== undefined);
+      if (targets.length < 2) return state;
+
+      const avgY_mm =
+        targets.reduce((sum, p) => sum + p.y_mm, 0) / targets.length;
+      const avgX_mm =
+        targets.reduce((sum, p) => sum + p.x_mm, 0) / targets.length;
+      const spacing_mm = state.settings.personSpacingMm;
+      const sortedByX = [...targets].sort((a, b) => a.x_mm - b.x_mm);
+      const startX_mm = avgX_mm - ((sortedByX.length - 1) * spacing_mm) / 2;
+
+      const placements = { ...state.placements };
+      sortedByX.forEach((p, i) => {
+        placements[p.memberId] = {
+          memberId: p.memberId,
+          x_mm: mm(startX_mm + i * spacing_mm),
+          y_mm: mm(avgY_mm),
+        };
+      });
+      return { ...state, placements };
     }
 
     case "UPDATE_SETTINGS": {

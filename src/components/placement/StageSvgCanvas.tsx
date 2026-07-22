@@ -1,4 +1,8 @@
-import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
+import type {
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  RefObject,
+} from "react";
 import type { Stage } from "../../domain/stage";
 import { mm } from "../../domain/units";
 import type { Member, Part } from "../../domain/roster";
@@ -9,11 +13,33 @@ import {
   computeStageBounds,
   computeViewBox,
   expandBoundsWithPoints,
+  viewBoxRectToString,
+  type ViewBoxRect,
 } from "../../coords/viewBox";
 import { TierShapes } from "./TierShapes";
 import { ChipLayer, type ChipEntry } from "./ChipLayer";
 import { PropsLayer } from "./PropsLayer";
 import { AudienceSideLabel } from "./AudienceSideLabel";
+import { GuideLines } from "./GuideLines";
+
+// 2点間の距離がこの値未満なら「重なり」として警告する。
+function computeOverlappingMemberIds(
+  points: { memberId: MemberId; x_mm: number; y_mm: number }[],
+  threshold_mm: number,
+): Set<MemberId> {
+  const overlapping = new Set<MemberId>();
+  for (let i = 0; i < points.length; i++) {
+    for (let j = i + 1; j < points.length; j++) {
+      const dx = points[i].x_mm - points[j].x_mm;
+      const dy = points[i].y_mm - points[j].y_mm;
+      if (Math.sqrt(dx * dx + dy * dy) < threshold_mm) {
+        overlapping.add(points[i].memberId);
+        overlapping.add(points[j].memberId);
+      }
+    }
+  }
+  return overlapping;
+}
 
 // 床(段以外のステージスペース)の描画量。実測値ではなく見た目上の目安。
 // ピアノを初期位置(y=-500mm)に置いたときに奥行き方向(約1085mm)が
@@ -35,10 +61,15 @@ interface StageSvgCanvasProps {
   draggingMemberId: MemberId | null;
   dragPreviewMm: { x_mm: number; y_mm: number } | null;
   onChipPointerDown: (memberId: MemberId, e: ReactPointerEvent) => void;
+  selectedMemberIds: ReadonlySet<MemberId>;
+  onChipClick: (memberId: MemberId, e: ReactMouseEvent) => void;
   draggingPropId: PropId | null;
   selectedPropId: PropId | null;
   onPropPointerDown: (propId: PropId, e: ReactPointerEvent) => void;
   onPropClick: (propId: PropId) => void;
+  onBackgroundClick: () => void;
+  onBackgroundPointerDown: (e: ReactPointerEvent) => void;
+  viewportOverride: ViewBoxRect | null;
 }
 
 export function StageSvgCanvas({
@@ -53,14 +84,19 @@ export function StageSvgCanvas({
   draggingMemberId,
   dragPreviewMm,
   onChipPointerDown,
+  selectedMemberIds,
+  onChipClick,
   draggingPropId,
   selectedPropId,
   onPropPointerDown,
   onPropClick,
+  onBackgroundClick,
+  onBackgroundPointerDown,
+  viewportOverride,
 }: StageSvgCanvasProps) {
   const colorByPartId = new Map(parts.map((p) => [p.id, p.color]));
 
-  const chips: ChipEntry[] = members
+  const chipsWithoutOverlap = members
     .filter((m) => m.isPresent)
     .flatMap((m) => {
       const isDragging = draggingMemberId === m.id;
@@ -74,9 +110,18 @@ export function StageSvgCanvas({
           color: colorByPartId.get(m.partId) ?? "#999999",
           label: displayNames.get(m.id) ?? m.familyName,
           isPreview: isDragging,
+          isSelected: selectedMemberIds.has(m.id),
         },
       ];
     });
+  const overlappingIds = computeOverlappingMemberIds(
+    chipsWithoutOverlap,
+    settings.personSpacingMm,
+  );
+  const chips: ChipEntry[] = chipsWithoutOverlap.map((c) => ({
+    ...c,
+    hasOverlap: overlappingIds.has(c.memberId),
+  }));
 
   const props = stage.props.map((p) => {
     const isDragging = draggingPropId === p.id;
@@ -115,13 +160,18 @@ export function StageSvgCanvas({
     stage.props.map((p) => ({ x_mm: p.x_mm, y_mm: p.y_mm })),
     1800,
   );
-  const viewBox = computeViewBox(boundsWithProps, 200);
+  const autoViewBox = computeViewBox(boundsWithProps, 200);
+  const viewBox = viewportOverride
+    ? viewBoxRectToString(viewportOverride)
+    : autoViewBox;
 
   return (
     <svg
       ref={svgRef}
       viewBox={viewBox}
       style={{ width: "100%", height: "100%", background: "#fff", touchAction: "none" }}
+      onClick={onBackgroundClick}
+      onPointerDown={onBackgroundPointerDown}
     >
       <g ref={groupRef} transform="scale(1, -1)">
         <rect
@@ -134,6 +184,7 @@ export function StageSvgCanvas({
           strokeWidth={5}
         />
         <TierShapes tiers={stage.tiers} />
+        <GuideLines minY_mm={-FLOOR_DEPTH_MM} maxY_mm={baseBounds.maxY_mm} />
         <PropsLayer
           props={props}
           chipDiameter_mm={settings.chipDiameterMm}
@@ -147,6 +198,7 @@ export function StageSvgCanvas({
           chipDiameter_mm={settings.chipDiameterMm}
           fontSize_mm={settings.fontSizeMm}
           onChipPointerDown={onChipPointerDown}
+          onChipClick={onChipClick}
         />
         <AudienceSideLabel y_mm={AUDIENCE_LABEL_Y_MM} />
       </g>

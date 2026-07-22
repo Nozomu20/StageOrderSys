@@ -1,5 +1,6 @@
 import { useDomainDispatch, useDomainState } from "../../state/DomainStateContext";
 import { TierCard } from "./TierCard";
+import { AllTierHeightForm } from "./AllTierHeightForm";
 
 export function StageSettingsScreen() {
   const state = useDomainState();
@@ -12,6 +13,7 @@ export function StageSettingsScreen() {
       <p style={{ fontSize: 12, color: "#666" }}>
         床(段以外のステージスペース)は自動的に描画されるため、ここでの設定は不要です。
       </p>
+      {sortedTiers.length > 0 && <AllTierHeightForm />}
       {sortedTiers.map((tier, i) => (
         <TierCard
           key={tier.id}

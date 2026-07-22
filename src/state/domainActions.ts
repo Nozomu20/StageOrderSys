@@ -21,6 +21,7 @@ export type DomainAction =
       count: number;
     }
   | { type: "SET_TIER_HEIGHT"; tierId: TierId; height_mm: Millimeter }
+  | { type: "SET_ALL_TIER_HEIGHTS"; height_mm: Millimeter }
   | { type: "ADD_PART"; name: string; color: string }
   | {
       type: "UPDATE_PART";
@@ -43,6 +44,8 @@ export type DomainAction =
   | { type: "REMOVE_MEMBER"; memberId: MemberId }
   | { type: "PLACE_MEMBER"; memberId: MemberId; x_mm: Millimeter; y_mm: Millimeter }
   | { type: "UNPLACE_MEMBER"; memberId: MemberId }
+  | { type: "UNPLACE_MEMBERS"; memberIds: MemberId[] }
+  | { type: "ALIGN_MEMBERS_ROW"; memberIds: MemberId[] }
   | { type: "UPDATE_SETTINGS"; patch: Partial<Settings> }
   | { type: "UPDATE_OUTPUT_INFO"; patch: Partial<OutputInfo> }
   | { type: "ADD_PROP"; propType: PropType }

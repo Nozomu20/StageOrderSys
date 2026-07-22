@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Tier } from "../../domain/stage";
-import { mm } from "../../domain/units";
+import { mm, mmToShakuSun, shakuSunToMm } from "../../domain/units";
 import { BOARD_CATALOG } from "../../domain/boardCatalog";
+import { HEIGHT_PRESETS } from "../../domain/heightPresets";
 import { useDomainDispatch } from "../../state/DomainStateContext";
 
 interface TierCardProps {
@@ -12,6 +13,9 @@ interface TierCardProps {
 }
 
 const CUSTOM_BOARD_ID = "custom";
+const CUSTOM_HEIGHT_CHOICE = "custom";
+// 1尺=303mmなので、この程度の誤差ならプリセット一致とみなす。
+const HEIGHT_MATCH_EPSILON_MM = 0.01;
 
 function findMatchingBoardId(tier: Tier): string {
   const seg = tier.segments[0];
@@ -20,6 +24,13 @@ function findMatchingBoardId(tier: Tier): string {
     (b) => b.width_mm === seg.width_mm && b.depth_mm === seg.depth_mm,
   );
   return match?.id ?? CUSTOM_BOARD_ID;
+}
+
+function findMatchingHeightChoice(height_mm: number): string {
+  const match = HEIGHT_PRESETS.find(
+    (p) => Math.abs(p.height_mm - height_mm) < HEIGHT_MATCH_EPSILON_MM,
+  );
+  return match ? String(match.height_mm) : CUSTOM_HEIGHT_CHOICE;
 }
 
 // 段=1種類の板を何枚か横に並べたもの、という入力モデル。
@@ -37,7 +48,28 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
     String(seg?.depth_mm ?? BOARD_CATALOG[0].depth_mm),
   );
   const [count, setCount] = useState(String(tier.segments.length || 1));
-  const [height, setHeight] = useState(String(tier.height_mm));
+
+  const [heightChoice, setHeightChoice] = useState(
+    findMatchingHeightChoice(tier.height_mm),
+  );
+  const [heightUnit, setHeightUnit] = useState<"mm" | "shakusun">("mm");
+  const initialShakuSun = mmToShakuSun(tier.height_mm);
+  const [customHeightMm, setCustomHeightMm] = useState(String(tier.height_mm));
+  const [customShaku, setCustomShaku] = useState(
+    String(initialShakuSun.shaku),
+  );
+  const [customSun, setCustomSun] = useState(
+    initialShakuSun.sun.toFixed(1),
+  );
+
+  // 全段一括設定など、このカード以外からheight_mmが変わった場合に表示を同期する。
+  useEffect(() => {
+    setHeightChoice(findMatchingHeightChoice(tier.height_mm));
+    const shakuSun = mmToShakuSun(tier.height_mm);
+    setCustomHeightMm(String(tier.height_mm));
+    setCustomShaku(String(shakuSun.shaku));
+    setCustomSun(shakuSun.sun.toFixed(1));
+  }, [tier.height_mm]);
 
   const selectedBoard = BOARD_CATALOG.find((b) => b.id === boardId);
 
@@ -58,15 +90,28 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
     });
   }
 
-  function commitHeight() {
-    const height_mm = Number(height);
-    if (Number.isFinite(height_mm)) {
+  function selectHeightChoice(choice: string) {
+    setHeightChoice(choice);
+    if (choice !== CUSTOM_HEIGHT_CHOICE) {
       dispatch({
         type: "SET_TIER_HEIGHT",
         tierId: tier.id,
-        height_mm: mm(height_mm),
+        height_mm: mm(Number(choice)),
       });
     }
+  }
+
+  function applyCustomHeight() {
+    const height_mm =
+      heightUnit === "mm"
+        ? Number(customHeightMm)
+        : shakuSunToMm(Number(customShaku) || 0, Number(customSun) || 0);
+    if (!Number.isFinite(height_mm) || height_mm < 0) return;
+    dispatch({
+      type: "SET_TIER_HEIGHT",
+      tierId: tier.id,
+      height_mm: mm(height_mm),
+    });
   }
 
   return (
@@ -144,14 +189,58 @@ export function TierCard({ tier, index, isFirst, isLast }: TierCardProps) {
 
       <div style={{ marginTop: 8 }}>
         この段の高さ(床からの高さ):{" "}
-        <input
-          type="number"
-          value={height}
-          onChange={(e) => setHeight(e.target.value)}
-          onBlur={commitHeight}
-          style={{ width: 90 }}
-        />{" "}
-        mm
+        <select
+          value={heightChoice}
+          onChange={(e) => selectHeightChoice(e.target.value)}
+        >
+          {HEIGHT_PRESETS.map((p) => (
+            <option key={p.label} value={String(p.height_mm)}>
+              {p.label}({p.height_mm}mm)
+            </option>
+          ))}
+          <option value={CUSTOM_HEIGHT_CHOICE}>その他(自由入力)</option>
+        </select>
+        {heightChoice === CUSTOM_HEIGHT_CHOICE && (
+          <span style={{ marginLeft: 8 }}>
+            <select
+              value={heightUnit}
+              onChange={(e) =>
+                setHeightUnit(e.target.value as "mm" | "shakusun")
+              }
+            >
+              <option value="mm">mm</option>
+              <option value="shakusun">尺・寸</option>
+            </select>
+            {heightUnit === "mm" ? (
+              <input
+                type="number"
+                value={customHeightMm}
+                onChange={(e) => setCustomHeightMm(e.target.value)}
+                style={{ width: 90, marginLeft: 4 }}
+              />
+            ) : (
+              <span style={{ marginLeft: 4 }}>
+                <input
+                  type="number"
+                  value={customShaku}
+                  onChange={(e) => setCustomShaku(e.target.value)}
+                  style={{ width: 50 }}
+                />
+                尺
+                <input
+                  type="number"
+                  value={customSun}
+                  onChange={(e) => setCustomSun(e.target.value)}
+                  style={{ width: 50, marginLeft: 4 }}
+                />
+                寸
+              </span>
+            )}
+            <button onClick={applyCustomHeight} style={{ marginLeft: 4 }}>
+              反映
+            </button>
+          </span>
+        )}
       </div>
     </div>
   );

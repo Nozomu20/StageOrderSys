@@ -47,8 +47,14 @@ export function PropsLayer({
                 stroke={isSelected ? "#2a78d6" : "#000000"}
                 strokeWidth={isSelected ? 10 : 4}
                 style={{ cursor: "grab", touchAction: "none" }}
-                onPointerDown={(e) => onPropPointerDown(prop.id, e)}
-                onClick={() => onPropClick(prop.id)}
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  onPropPointerDown(prop.id, e);
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPropClick(prop.id);
+                }}
               />
               <MmText
                 x_mm={prop.x_mm}
@@ -72,8 +78,14 @@ export function PropsLayer({
               stroke={isSelected ? "#2a78d6" : "#000000"}
               strokeWidth={isSelected ? 10 : 4}
               style={{ cursor: "grab", touchAction: "none" }}
-              onPointerDown={(e) => onPropPointerDown(prop.id, e)}
-              onClick={() => onPropClick(prop.id)}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                onPropPointerDown(prop.id, e);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPropClick(prop.id);
+              }}
             />
           </g>
         );

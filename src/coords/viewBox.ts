@@ -42,6 +42,19 @@ export function expandBoundsWithPoints(
   return { minX_mm, maxX_mm, minY_mm, maxY_mm };
 }
 
+// ズーム/パン用に、SVGのviewBox属性の4値を直接保持する型。
+// (scale(1,-1)された座標系での値であり、xyはそのままSVGのviewBoxに渡せる)
+export interface ViewBoxRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export function viewBoxRectToString(rect: ViewBoxRect): string {
+  return `${rect.x} ${rect.y} ${rect.width} ${rect.height}`;
+}
+
 // SVGルートに渡すviewBox文字列を作る。
 // 内側の<g transform="scale(1,-1)">で奥(Y+)を画面の上に見せる前提のため、
 // Y方向はドメイン座標の符号を反転させた範囲にする。
