@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDomainDispatch, useDomainState } from "../../state/DomainStateContext";
-
-const DEFAULT_NEW_PART_COLOR = "#64b5f6";
+import { nextPartColor } from "../../domain/partColors";
+import { ColorSwatchPicker } from "./ColorSwatchPicker";
 
 export function PartEditor() {
   const state = useDomainState();
@@ -16,14 +16,13 @@ export function PartEditor() {
           .sort((a, b) => a.order - b.order)
           .map((part) => (
             <li key={part.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <input
-                type="color"
+              <ColorSwatchPicker
                 value={part.color}
-                onChange={(e) =>
+                onChange={(color) =>
                   dispatch({
                     type: "UPDATE_PART",
                     partId: part.id,
-                    patch: { color: e.target.value },
+                    patch: { color },
                   })
                 }
               />
@@ -60,7 +59,7 @@ export function PartEditor() {
           dispatch({
             type: "ADD_PART",
             name: newPartName.trim(),
-            color: DEFAULT_NEW_PART_COLOR,
+            color: nextPartColor(state.roster.parts.length),
           });
           setNewPartName("");
         }}
