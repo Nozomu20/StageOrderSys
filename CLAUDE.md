@@ -39,7 +39,10 @@
   - `src/state/`: domain state用の単一reducer(`domainReducer.ts`)。UI状態(タブ・選択・ドラッグ中の一時座標)はdomain stateと分離し、Undo/Redoの対象に含めない設計
   - `src/coords/`: SVGのuser space自体をmm相当として扱い、Y軸反転はSVGルート直下の`<g transform="scale(1,-1)">`一箇所に集約。ポインタ→mm変換は`pointerToMm.ts`にのみ存在
   - 画面: ステージ設定(段のsimpleモードのみ)・団員登録(一括貼り付け・パート管理・表示名プレビュー)・配置エディタ(未配置一覧からのドラッグ配置、既存コマの再ドラッグ)
-- 未実装(意図的にスコープ外。SHOULD/COULD): sessionStorageへの自動退避、左右反転(ミラー)、パートごとの人数カウント表示、名簿の並べ替え、段のadvancedモード(扇形)
+- 未実装(意図的にスコープ外。SHOULD/COULD): 左右反転(ミラー)、パートごとの人数カウント表示、名簿の並べ替え、段のadvancedモード(扇形)
+- ブラウザ内への自動退避(SHOULD、5.2章)を実装済み。`sessionStorage`に`history.present`(domain stateの現在値のみ。undo履歴は含めない)を変更のたびに保存し、起動時に`createInitialDomainState()`の代わりに復元する(`sessionPersistence.ts`)。UIには一切出さない
+- CSV名簿インポートを実装済み(要件定義には無い、ユーザーからの追加要望)。「姓」「名」「パート」列のヘッダー付きCSVを想定し、既存名簿への追加のみ(置き換えなし)。パート名が既存と一致しなければ自動でパートを新規作成する。
+  - **重要な経緯**: 当初「.xlsxも直接読めるようにしたい」という要望でSheetJS社の`xlsx`パッケージ導入を検討したが、npm公開版(0.18.5)にプロトタイプ汚染・ReDoSの既知の脆弱性があり修正版がnpmに無いことが`npm audit`で判明したため、ユーザー判断で**xlsx非対応・CSVのみ**に変更した。CSVパーサは外部ライブラリなしで自前実装(`src/import/parseRosterCsv.ts`)。今後.xlsx対応の要望が出た場合は、SheetJS公式CDNからの修正済みビルド導入を検討すること(npmレジストリ経由は避ける)
 - Undo/Redoを実装済み。`domainReducer`自体は変更せず、`historyReducer.ts`が`{past, present, future}`でラップする形(1dispatch=1履歴、上限100件)。`DomainStateContext`の`useDomainState`/`useDomainDispatch`のAPIは変更なしで、`useUndoRedo()`を新設。UIは`TabNav`右側の「元に戻す」「やり直す」ボタン+Ctrl+Z/Ctrl+Shift+Z(テキスト入力中は無効化)。選択状態・ドラッグ中の一時座標・ズーム/パン・グリッド吸着ON/OFFなどのUI状態はdomain stateと分離済みだったため、そのままUndo対象外になっている
 - PNG/PDF出力を実装済み(「出力」タブ)。タイトル・日付・団体名を入力してPNGダウンロード(1〜3倍)とA4横印刷に対応。印刷CSSは`flex:1`だとページ計算とSVGの縦横比が絡んで複数ページに分割されるバグがあったため、`.print-stage`の高さは固定mm値にしている
 - 配置エディタの支援機能をひととおり実装済み:

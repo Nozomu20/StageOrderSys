@@ -1,4 +1,11 @@
-import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  type Dispatch,
+  type ReactNode,
+} from "react";
 import { createInitialDomainState, type DomainState } from "./domainState";
 import {
   createInitialHistoryState,
@@ -7,6 +14,7 @@ import {
   type HistoryState,
 } from "./historyReducer";
 import type { DomainAction } from "./domainActions";
+import { loadDomainState, saveDomainState } from "./sessionPersistence";
 
 const DomainStateContext = createContext<DomainState | undefined>(undefined);
 const DomainDispatchContext = createContext<Dispatch<DomainAction> | undefined>(
@@ -17,11 +25,17 @@ const HistoryMetaContext = createContext<
 >(undefined);
 
 function createInitialState(): HistoryState {
-  return createInitialHistoryState(createInitialDomainState());
+  const restored = loadDomainState();
+  return createInitialHistoryState(restored ?? createInitialDomainState());
 }
 
 export function DomainStateProvider({ children }: { children: ReactNode }) {
   const [history, dispatch] = useReducer(historyReducer, undefined, createInitialState);
+
+  useEffect(() => {
+    saveDomainState(history.present);
+  }, [history.present]);
+
   return (
     <DomainStateContext.Provider value={history.present}>
       <DomainDispatchContext.Provider value={dispatch}>

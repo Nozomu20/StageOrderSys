@@ -2,6 +2,7 @@ import type { Millimeter } from "../domain/units";
 import type { MemberId, PartId, PropId, TierId } from "../domain/ids";
 import type { Member, Part } from "../domain/roster";
 import type { ParsedName } from "../domain/nameParsing";
+import type { ImportedMemberRow } from "../import/parseRosterCsv";
 import type { BoardSize } from "../domain/boardCatalog";
 import type { PropType } from "../domain/stage";
 import type { Settings } from "./settings";
@@ -30,6 +31,7 @@ export type DomainAction =
     }
   | { type: "REMOVE_PART"; partId: PartId }
   | { type: "ADD_MEMBERS_BULK"; names: ParsedName[]; partId: PartId }
+  | { type: "IMPORT_MEMBERS"; rows: ImportedMemberRow[] }
   | { type: "ADD_MEMBER"; familyName: string; givenName?: string; partId: PartId }
   | {
       type: "UPDATE_MEMBER";

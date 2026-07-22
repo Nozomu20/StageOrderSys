@@ -5,6 +5,7 @@ import { createNextTier, createProp } from "../domain/stage";
 import { createSegmentsFromBoard } from "../domain/boardCatalog";
 import { withoutPlacement } from "../domain/placement";
 import { mm } from "../domain/units";
+import { nextPartColor } from "../domain/partColors";
 
 // 純粋関数として保つこと。副作用・直接mutationは行わない。
 // (将来Undo/Redoの履歴管理でこのreducerをラップする前提)
@@ -130,6 +131,25 @@ export function domainReducer(
         ...state,
         roster: {
           ...state.roster,
+          members: [...state.roster.members, ...newMembers],
+        },
+      };
+    }
+
+    case "IMPORT_MEMBERS": {
+      const parts = [...state.roster.parts];
+      const newMembers = action.rows.map((row) => {
+        let part = parts.find((p) => p.name === row.partName);
+        if (!part) {
+          part = createPart(row.partName, nextPartColor(parts.length), parts.length);
+          parts.push(part);
+        }
+        return createMember(row.familyName, row.givenName, part.id);
+      });
+      return {
+        ...state,
+        roster: {
+          parts,
           members: [...state.roster.members, ...newMembers],
         },
       };

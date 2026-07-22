@@ -1,6 +1,7 @@
 import { PartEditor } from "./PartEditor";
 import { AddMemberForm } from "./AddMemberForm";
 import { BulkPasteForm } from "./BulkPasteForm";
+import { ImportRosterForm } from "./ImportRosterForm";
 import { MemberTable } from "./MemberTable";
 
 export function RosterScreen() {
@@ -10,6 +11,7 @@ export function RosterScreen() {
       <PartEditor />
       <AddMemberForm />
       <BulkPasteForm />
+      <ImportRosterForm />
       <MemberTable />
     </div>
   );
