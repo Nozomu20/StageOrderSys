@@ -45,6 +45,7 @@
   - **重要な経緯**: 当初「.xlsxも直接読めるようにしたい」という要望でSheetJS社の`xlsx`パッケージ導入を検討したが、npm公開版(0.18.5)にプロトタイプ汚染・ReDoSの既知の脆弱性があり修正版がnpmに無いことが`npm audit`で判明したため、ユーザー判断で**xlsx非対応・CSVのみ**に変更した。CSVパーサは外部ライブラリなしで自前実装(`src/import/parseRosterCsv.ts`)。今後.xlsx対応の要望が出た場合は、SheetJS公式CDNからの修正済みビルド導入を検討すること(npmレジストリ経由は避ける)
 - Undo/Redoを実装済み。`domainReducer`自体は変更せず、`historyReducer.ts`が`{past, present, future}`でラップする形(1dispatch=1履歴、上限100件)。`DomainStateContext`の`useDomainState`/`useDomainDispatch`のAPIは変更なしで、`useUndoRedo()`を新設。UIは`TabNav`右側の「元に戻す」「やり直す」ボタン+Ctrl+Z/Ctrl+Shift+Z(テキスト入力中は無効化)。選択状態・ドラッグ中の一時座標・ズーム/パン・グリッド吸着ON/OFFなどのUI状態はdomain stateと分離済みだったため、そのままUndo対象外になっている
 - PNG/PDF出力を実装済み(「出力」タブ)。タイトル・日付・団体名を入力してPNGダウンロード(1〜3倍)とA4横印刷に対応。印刷CSSは`flex:1`だとページ計算とSVGの縦横比が絡んで複数ページに分割されるバグがあったため、`.print-stage`の高さは固定mm値にしている
+  - **バグ修正**: 「PNGをダウンロード」ボタンを連打(または処理中に再クリック)すると、巨大なcanvasを同時に複数確保しようとして`canvas.toBlob`が失敗することがあった(ステージが広い/段数が多いほど発生しやすい)。`OutputScreen.tsx`に`isExporting`状態を追加し、書き出し中はボタンを無効化して多重実行そのものを防いだ。また失敗時はコンソールに埋もれさせず、画面上に「解像度を下げるか、しばらく待ってから再度お試しください」という文言で表示するようにした(`exportError`)。なお、段数・板の枚数が多い大きなステージで解像度2倍・3倍を選ぶと、多重実行でなくても単発でcanvasサイズの上限に達して失敗しうることを確認済み(ブラウザのcanvas面積上限による)。この根本原因(巨大ステージでの高解像度書き出し)自体の解消(分割書き出し等)は未対応
 - 配置エディタの支援機能をひととおり実装済み:
   - 団員の個別追加フォーム(`AddMemberForm.tsx`、一括貼り付けとは別)
   - コマの選択・shift+クリックでの複数選択・「未配置に戻す」(`UNPLACE_MEMBERS`)・「横一列に整列」(`ALIGN_MEMBERS_ROW`、選択メンバーの平均Y・平均X中心に`personSpacingMm`間隔で並べ替え)

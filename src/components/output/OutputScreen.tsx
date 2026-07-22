@@ -26,6 +26,8 @@ export function OutputScreen() {
   const [date, setDate] = useState(state.outputInfo.date);
   const [groupName, setGroupName] = useState(state.outputInfo.groupName);
   const [scale, setScale] = useState("2");
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   function commitInfo(patch: Partial<typeof state.outputInfo>) {
     dispatch({ type: "UPDATE_OUTPUT_INFO", patch });
@@ -33,20 +35,35 @@ export function OutputScreen() {
 
   const displayNames = resolveDisplayNames(state.roster.members);
 
+  // 書き出し中の連打で複数の巨大なcanvasを同時に確保しようとすると、
+  // ブラウザによってはtoBlobが失敗することがあるため、処理中は
+  // ボタンを無効化して多重実行を防ぐ。失敗時もコンソールに埋もれさせず
+  // 画面上に理由を表示する。
   async function handleDownloadPng() {
+    if (isExporting) return;
     const svg = svgRef.current;
     if (!svg) return;
-    const blob = await exportSvgToPngBlob(svg, Number(scale), {
-      title,
-      groupName,
-      date,
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${title || "オーダー表"}.png`;
-    a.click();
-    URL.revokeObjectURL(url);
+    setIsExporting(true);
+    setExportError(null);
+    try {
+      const blob = await exportSvgToPngBlob(svg, Number(scale), {
+        title,
+        groupName,
+        date,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${title || "オーダー表"}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError(
+        "PNGの生成に失敗しました。解像度を下げるか、しばらく待ってから再度お試しください。",
+      );
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   return (
@@ -95,10 +112,25 @@ export function OutputScreen() {
             <option value="2">2倍</option>
             <option value="3">3倍</option>
           </select>
-          <button className="btn-primary" onClick={handleDownloadPng}>
-            PNGをダウンロード
+          <button
+            className="btn-primary"
+            onClick={handleDownloadPng}
+            disabled={isExporting}
+          >
+            {isExporting ? "書き出し中…" : "PNGをダウンロード"}
           </button>
         </div>
+        {exportError && (
+          <p
+            style={{
+              color: "var(--color-danger)",
+              fontSize: "var(--font-sm)",
+              margin: "-4px 0 12px",
+            }}
+          >
+            {exportError}
+          </p>
+        )}
         <div className="field-row" style={{ marginBottom: 0 }}>
           <span className="field-label">印刷</span>
           <button onClick={() => window.print()}>印刷する(A4横・PDF)</button>
