@@ -5,8 +5,10 @@
   --color-border-strong: #c7c4bb;
   --color-text: #1c1c1a;
   --color-text-muted: #6b6a63;
-  --color-accent: #2a78d6;
-  --color-accent-hover: #1c5cab;
+  --color-accent: #0d9488;
+  --color-accent-hover: #0f766e;
+  --color-accent-soft: #e6f6f4;
+  --color-accent-soft-border: #b7e4de;
   --color-danger: #c0392b;
   --color-danger-bg-hover: #fbeceb;
 
@@ -167,11 +169,6 @@ tbody tr:hover {
   padding: var(--space-2) var(--space-4);
 }
 
-.tab-nav-tabs {
-  display: flex;
-  gap: var(--space-1);
-}
-
 .tab-button {
   border: none;
   background: transparent;
@@ -193,6 +190,93 @@ tbody tr:hover {
 
 .tab-button.is-active:hover {
   color: #fff;
+}
+
+/* ステージ設定→団員登録→配置エディタ→出力、という作業の流れを
+   番号付きステップとして見せるナビゲーション。「今どこにいるか」を
+   大きく強調し、設定はこの流れの外の補助操作として右側に分離する。 */
+.step-flow {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: var(--space-1);
+}
+
+.step-flow-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: none;
+  background: transparent;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.step-item:hover:not(:disabled) {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border-strong);
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.step-label {
+  font-size: var(--font-base);
+}
+
+.step-item.is-active {
+  color: var(--color-text);
+}
+
+.step-item.is-active:hover {
+  color: var(--color-text);
+}
+
+.step-item.is-active .step-number {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+  transform: scale(1.15);
+}
+
+.step-item.is-active .step-label {
+  font-weight: 700;
+}
+
+.step-connector {
+  color: var(--color-border-strong);
+  font-size: var(--font-sm);
+}
+
+.tab-nav-aux {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--color-border);
 }
 
 .screen {
@@ -287,8 +371,8 @@ tbody tr:hover {
 }
 
 .selection-panel {
-  background: #eaf2fc;
-  border: 1px solid #c7ddf5;
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-accent-soft-border);
   border-radius: var(--radius);
   padding: var(--space-3);
   margin-top: var(--space-2);

@@ -44,7 +44,7 @@ export function PropsLayer({
                 cy={prop.y_mm}
                 r={chipDiameter_mm / 2}
                 fill="#333333"
-                stroke={isSelected ? "#2a78d6" : "#000000"}
+                stroke={isSelected ? "#0d9488" : "#000000"}
                 strokeWidth={isSelected ? 10 : 4}
                 style={{ cursor: "grab", touchAction: "none" }}
                 onPointerDown={(e) => {
@@ -75,7 +75,7 @@ export function PropsLayer({
             <path
               d={PIANO_PATH}
               fill="#222222"
-              stroke={isSelected ? "#2a78d6" : "#000000"}
+              stroke={isSelected ? "#0d9488" : "#000000"}
               strokeWidth={isSelected ? 10 : 4}
               style={{ cursor: "grab", touchAction: "none" }}
               onPointerDown={(e) => {

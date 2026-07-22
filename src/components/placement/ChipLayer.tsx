@@ -49,7 +49,7 @@ export function ChipLayer({
             cy={chip.y_mm}
             r={radius}
             fill={chip.color}
-            stroke={chip.isSelected ? "#2a78d6" : "#333"}
+            stroke={chip.isSelected ? "#0d9488" : "#333"}
             strokeWidth={chip.isSelected ? 10 : 4}
             style={{ cursor: "grab", touchAction: "none" }}
             onPointerDown={(e) => {

@@ -12,7 +12,7 @@ export function GuideLines({ minY_mm, maxY_mm }: GuideLinesProps) {
       y1={minY_mm}
       x2={0}
       y2={maxY_mm}
-      stroke="#2a78d6"
+      stroke="#0d9488"
       strokeWidth={3}
       strokeDasharray="20 15"
       opacity={0.5}
