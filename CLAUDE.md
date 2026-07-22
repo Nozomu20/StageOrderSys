@@ -39,7 +39,8 @@
   - `src/state/`: domain state用の単一reducer(`domainReducer.ts`)。UI状態(タブ・選択・ドラッグ中の一時座標)はdomain stateと分離し、Undo/Redoの対象に含めない設計
   - `src/coords/`: SVGのuser space自体をmm相当として扱い、Y軸反転はSVGルート直下の`<g transform="scale(1,-1)">`一箇所に集約。ポインタ→mm変換は`pointerToMm.ts`にのみ存在
   - 画面: ステージ設定(段のsimpleモードのみ)・団員登録(一括貼り付け・パート管理・表示名プレビュー)・配置エディタ(未配置一覧からのドラッグ配置、既存コマの再ドラッグ)
-- 未実装(意図的にスコープ外。SHOULD/COULD): sessionStorageへの自動退避、左右反転(ミラー)、パートごとの人数カウント表示、名簿の並べ替え、段のadvancedモード(扇形)、Undo/Redo本体(設計上の下地はあるが履歴管理自体は未着手)
+- 未実装(意図的にスコープ外。SHOULD/COULD): sessionStorageへの自動退避、左右反転(ミラー)、パートごとの人数カウント表示、名簿の並べ替え、段のadvancedモード(扇形)
+- Undo/Redoを実装済み。`domainReducer`自体は変更せず、`historyReducer.ts`が`{past, present, future}`でラップする形(1dispatch=1履歴、上限100件)。`DomainStateContext`の`useDomainState`/`useDomainDispatch`のAPIは変更なしで、`useUndoRedo()`を新設。UIは`TabNav`右側の「元に戻す」「やり直す」ボタン+Ctrl+Z/Ctrl+Shift+Z(テキスト入力中は無効化)。選択状態・ドラッグ中の一時座標・ズーム/パン・グリッド吸着ON/OFFなどのUI状態はdomain stateと分離済みだったため、そのままUndo対象外になっている
 - PNG/PDF出力を実装済み(「出力」タブ)。タイトル・日付・団体名を入力してPNGダウンロード(1〜3倍)とA4横印刷に対応。印刷CSSは`flex:1`だとページ計算とSVGの縦横比が絡んで複数ページに分割されるバグがあったため、`.print-stage`の高さは固定mm値にしている
 - 配置エディタの支援機能をひととおり実装済み:
   - 団員の個別追加フォーム(`AddMemberForm.tsx`、一括貼り付けとは別)

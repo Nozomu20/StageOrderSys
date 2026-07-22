@@ -1,19 +1,39 @@
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from "react";
 import { createInitialDomainState, type DomainState } from "./domainState";
-import { domainReducer } from "./domainReducer";
+import {
+  createInitialHistoryState,
+  historyReducer,
+  type HistoryAction,
+  type HistoryState,
+} from "./historyReducer";
 import type { DomainAction } from "./domainActions";
 
 const DomainStateContext = createContext<DomainState | undefined>(undefined);
 const DomainDispatchContext = createContext<Dispatch<DomainAction> | undefined>(
   undefined,
 );
+const HistoryMetaContext = createContext<
+  { canUndo: boolean; canRedo: boolean; dispatch: Dispatch<HistoryAction> } | undefined
+>(undefined);
+
+function createInitialState(): HistoryState {
+  return createInitialHistoryState(createInitialDomainState());
+}
 
 export function DomainStateProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(domainReducer, undefined, createInitialDomainState);
+  const [history, dispatch] = useReducer(historyReducer, undefined, createInitialState);
   return (
-    <DomainStateContext.Provider value={state}>
+    <DomainStateContext.Provider value={history.present}>
       <DomainDispatchContext.Provider value={dispatch}>
-        {children}
+        <HistoryMetaContext.Provider
+          value={{
+            canUndo: history.past.length > 0,
+            canRedo: history.future.length > 0,
+            dispatch,
+          }}
+        >
+          {children}
+        </HistoryMetaContext.Provider>
       </DomainDispatchContext.Provider>
     </DomainStateContext.Provider>
   );
@@ -29,4 +49,20 @@ export function useDomainDispatch(): Dispatch<DomainAction> {
   const dispatch = useContext(DomainDispatchContext);
   if (!dispatch) throw new Error("DomainStateProvider の外では使えません");
   return dispatch;
+}
+
+export function useUndoRedo(): {
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+} {
+  const meta = useContext(HistoryMetaContext);
+  if (!meta) throw new Error("DomainStateProvider の外では使えません");
+  return {
+    undo: () => meta.dispatch({ type: "UNDO" }),
+    redo: () => meta.dispatch({ type: "REDO" }),
+    canUndo: meta.canUndo,
+    canRedo: meta.canRedo,
+  };
 }

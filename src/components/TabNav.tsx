@@ -1,5 +1,6 @@
 import { useUIState } from "../state/UIStateContext";
 import type { ScreenTab } from "../state/uiState";
+import { UndoRedoControls } from "./UndoRedoControls";
 
 const TABS: { tab: ScreenTab; label: string }[] = [
   { tab: "stageSettings", label: "ステージ設定" },
@@ -12,18 +13,30 @@ const TABS: { tab: ScreenTab; label: string }[] = [
 export function TabNav() {
   const { uiState, setUIState } = useUIState();
   return (
-    <nav style={{ display: "flex", gap: 8, borderBottom: "1px solid #ccc", padding: 8 }}>
-      {TABS.map(({ tab, label }) => (
-        <button
-          key={tab}
-          onClick={() => setUIState({ activeTab: tab })}
-          style={{
-            fontWeight: uiState.activeTab === tab ? "bold" : "normal",
-          }}
-        >
-          {label}
-        </button>
-      ))}
+    <nav
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 8,
+        borderBottom: "1px solid #ccc",
+        padding: 8,
+      }}
+    >
+      <div style={{ display: "flex", gap: 8 }}>
+        {TABS.map(({ tab, label }) => (
+          <button
+            key={tab}
+            onClick={() => setUIState({ activeTab: tab })}
+            style={{
+              fontWeight: uiState.activeTab === tab ? "bold" : "normal",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <UndoRedoControls />
     </nav>
   );
 }
