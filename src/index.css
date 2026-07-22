@@ -279,6 +279,29 @@ tbody tr:hover {
   border-left: 1px solid var(--color-border);
 }
 
+/* 問い合わせ導線。外部リンクのみで、常時表示する薄いバー。 */
+.app-footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-4);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}
+
+.app-footer a {
+  color: var(--color-text-muted);
+  text-decoration: underline;
+}
+
+.app-footer a:hover {
+  color: var(--color-accent);
+}
+
 .screen {
   padding: var(--space-5);
   max-width: 1000px;

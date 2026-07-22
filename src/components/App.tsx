@@ -1,6 +1,7 @@
 import { DomainStateProvider } from "../state/DomainStateContext";
 import { UIStateProvider, useUIState } from "../state/UIStateContext";
 import { TabNav } from "./TabNav";
+import { AppFooter } from "./AppFooter";
 import { StageSettingsScreen } from "./stageSettings/StageSettingsScreen";
 import { RosterScreen } from "./roster/RosterScreen";
 import { PlacementEditorScreen } from "./placement/PlacementEditorScreen";
@@ -46,6 +47,7 @@ export function App() {
         <div className="app-shell">
           <TabNav />
           <ScreensArea />
+          <AppFooter />
         </div>
       </UIStateProvider>
     </DomainStateProvider>
