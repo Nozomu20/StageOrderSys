@@ -8,7 +8,8 @@ import { useDomainDispatch, useDomainState } from "../../state/DomainStateContex
 import { resolveDisplayNames } from "../../domain/displayName";
 import { StageSvgCanvas } from "../placement/StageSvgCanvas";
 import { exportSvgToPngBlob } from "../../export/exportPng";
-import { downloadJson } from "../../export/exportJson";
+import { downloadSavedFile } from "../../export/exportJson";
+import { FILE_EXTENSION } from "../../state/savedFile";
 import type { MemberId, PropId } from "../../domain/ids";
 
 const noopMember = (_memberId: MemberId, _e: ReactPointerEvent) => {};
@@ -37,9 +38,9 @@ export function OutputScreen() {
   const displayNames = resolveDisplayNames(state.roster.members);
 
   // セッションをまたいで続きから作業できるよう、domain state全体を
-  // JSONファイルとして保存する(要件定義5.3のCOULD項目、ユーザーからの追加要望)。
+  // 保存する(要件定義5.3のCOULD項目、ユーザーからの追加要望)。
   function handleSaveJson() {
-    downloadJson(state, `${title || "オーダー表"}.json`);
+    downloadSavedFile(state, title || "オーダー表");
   }
 
   // 書き出し中の連打で複数の巨大なcanvasを同時に確保しようとすると、
@@ -144,10 +145,10 @@ export function OutputScreen() {
         </div>
         <div className="field-row" style={{ marginBottom: 0 }}>
           <span className="field-label">作業内容</span>
-          <button onClick={handleSaveJson}>JSONで保存</button>
+          <button onClick={handleSaveJson}>ファイルに保存</button>
         </div>
         <p className="screen-hint" style={{ margin: "8px 0 0" }}>
-          団員名簿・配置などをJSONファイルに保存できます。「ステージ設定」画面から読み込んで続きから作業できます。
+          団員名簿・配置などを専用ファイル(.{FILE_EXTENSION})に保存できます。「ステージ設定」画面から読み込んで続きから作業できます。
         </p>
       </div>
 

@@ -1,5 +1,5 @@
 import type { DomainState } from "../state/domainState";
-import { SCHEMA_VERSION } from "../state/savedFile";
+import { decodeObscured, SCHEMA_VERSION } from "../state/savedFile";
 
 const REQUIRED_STATE_KEYS = [
   "stage",
@@ -9,16 +9,25 @@ const REQUIRED_STATE_KEYS = [
   "outputInfo",
 ] as const;
 
-// このツールで書き出したJSONかどうかを最低限チェックする。
+// このツールで書き出したファイルかどうかを最低限チェックする。
 // (フィールドの中身まで厳密に検証はしないが、明らかに違うファイルや
 // 将来のバージョンで保存されたファイルを弾く)
 export function parseSavedFileJson(text: string): DomainState {
+  // 保存形式はbase64で難読化しているが、素のJSONをそのまま渡された
+  // 場合(以前のバージョンで保存したファイルなど)にも一応対応する。
+  let jsonText: string;
+  try {
+    jsonText = decodeObscured(text);
+  } catch {
+    jsonText = text;
+  }
+
   let parsed: unknown;
   try {
-    parsed = JSON.parse(text);
+    parsed = JSON.parse(jsonText);
   } catch {
     throw new Error(
-      "JSONとして読み込めませんでした。ファイルが壊れているか、対応していない形式です。",
+      "読み込めませんでした。ファイルが壊れているか、対応していない形式です。",
     );
   }
 

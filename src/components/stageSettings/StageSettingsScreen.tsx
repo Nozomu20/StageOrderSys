@@ -6,6 +6,7 @@ import {
 } from "../../state/DomainStateContext";
 import { parseSavedFileJson } from "../../import/importJson";
 import type { DomainState } from "../../state/domainState";
+import { FILE_EXTENSION } from "../../state/savedFile";
 import { TierCard } from "./TierCard";
 import { AllTierHeightForm } from "./AllTierHeightForm";
 
@@ -33,7 +34,7 @@ export function StageSettingsScreen() {
       setLoadError(
         err instanceof Error
           ? err.message
-          : "JSONの読み込みに失敗しました。",
+          : "ファイルの読み込みに失敗しました。",
       );
     }
   }
@@ -55,12 +56,12 @@ export function StageSettingsScreen() {
         <div className="field-row" style={{ marginBottom: 0 }}>
           <span className="field-label">作業内容の読み込み</span>
           <button onClick={() => fileInputRef.current?.click()}>
-            JSONから読み込む
+            ファイルから読み込む
           </button>
           <input
             ref={fileInputRef}
             type="file"
-            accept="application/json,.json"
+            accept={`.${FILE_EXTENSION},.json`}
             style={{ display: "none" }}
             onChange={handleFileSelected}
           />
@@ -77,7 +78,7 @@ export function StageSettingsScreen() {
           </p>
         )}
         <p className="screen-hint" style={{ margin: "8px 0 0" }}>
-          「出力」画面で保存したJSONファイルを読み込んで、続きから作業できます。
+          「出力」画面で保存したファイル(.{FILE_EXTENSION})を読み込んで、続きから作業できます。
         </p>
       </div>
 
@@ -105,7 +106,7 @@ export function StageSettingsScreen() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="load-confirm-title" style={{ marginBottom: "var(--space-3)" }}>
-              JSONファイルの読み込み
+              ファイルの読み込み
             </h2>
             <p>
               現在の作業内容を、読み込んだ内容で置き換えます。この操作はUndo/Redoの履歴もリセットします。よろしいですか?
