@@ -3,14 +3,25 @@
 export function AppFooter() {
   return (
     <footer className="app-footer">
-      <a
-        className="app-footer-link"
-        href="https://forms.gle/g3Pjeze9YgsN6a4GA"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        ご意見・不具合報告はこちら
-      </a>
+      <span>
+        ご意見・不具合報告は
+        <a
+          href="https://forms.gle/g3Pjeze9YgsN6a4GA"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          フォーム
+        </a>
+        または
+        <a
+          href="https://x.com/mrok_0220"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          XのDM
+        </a>
+        まで
+      </span>
     </footer>
   );
 }

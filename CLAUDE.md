@@ -34,56 +34,26 @@
 ## 現在の状況
 
 - 開発環境: Vite + React 19 + TypeScript。lintはoxlint(ESLintではない)。パッケージ管理はnpm
-- 第1段階の実装が一通り完了:
-  - `src/domain/`: Stage/Tier/Segment/Part/Member/Placement/Propの型と、段のY方向積み上げ(`tierLayout.ts`)、表示名自動解決(`displayName.ts`)
-  - `src/state/`: domain state用の単一reducer(`domainReducer.ts`)。UI状態(タブ・選択・ドラッグ中の一時座標)はdomain stateと分離し、Undo/Redoの対象に含めない設計
-  - `src/coords/`: SVGのuser space自体をmm相当として扱い、Y軸反転はSVGルート直下の`<g transform="scale(1,-1)">`一箇所に集約。ポインタ→mm変換は`pointerToMm.ts`にのみ存在
-  - 画面: ステージ設定(段のsimpleモードのみ)・団員登録(一括貼り付け・パート管理・表示名プレビュー)・配置エディタ(未配置一覧からのドラッグ配置、既存コマの再ドラッグ)
-- 未実装(意図的にスコープ外。SHOULD/COULD): 左右反転(ミラー)、パートごとの人数カウント表示、名簿の並べ替え、段のadvancedモード(扇形)
-- ブラウザ内への自動退避(SHOULD、5.2章)を実装済み。`sessionStorage`に`history.present`(domain stateの現在値のみ。undo履歴は含めない)を変更のたびに保存し、起動時に`createInitialDomainState()`の代わりに復元する(`sessionPersistence.ts`)。UIには一切出さない
-- CSV名簿インポートを実装済み(要件定義には無い、ユーザーからの追加要望)。「姓」「名」「パート」列のヘッダー付きCSVを想定し、既存名簿への追加のみ(置き換えなし)。パート名が既存と一致しなければ自動でパートを新規作成する。
-  - **重要な経緯**: 当初「.xlsxも直接読めるようにしたい」という要望でSheetJS社の`xlsx`パッケージ導入を検討したが、npm公開版(0.18.5)にプロトタイプ汚染・ReDoSの既知の脆弱性があり修正版がnpmに無いことが`npm audit`で判明したため、ユーザー判断で**xlsx非対応・CSVのみ**に変更した。CSVパーサは外部ライブラリなしで自前実装(`src/import/parseRosterCsv.ts`)。今後.xlsx対応の要望が出た場合は、SheetJS公式CDNからの修正済みビルド導入を検討すること(npmレジストリ経由は避ける)
-- Undo/Redoを実装済み。`domainReducer`自体は変更せず、`historyReducer.ts`が`{past, present, future}`でラップする形(1dispatch=1履歴、上限100件)。`DomainStateContext`の`useDomainState`/`useDomainDispatch`のAPIは変更なしで、`useUndoRedo()`を新設。UIは`TabNav`右側の「元に戻す」「やり直す」ボタン+Ctrl+Z/Ctrl+Shift+Z(テキスト入力中は無効化)。選択状態・ドラッグ中の一時座標・ズーム/パン・グリッド吸着ON/OFFなどのUI状態はdomain stateと分離済みだったため、そのままUndo対象外になっている
-- PNG/PDF出力を実装済み(「出力」タブ)。タイトル・日付・団体名を入力してPNGダウンロード(1〜3倍)とA4横印刷に対応。印刷CSSは`flex:1`だとページ計算とSVGの縦横比が絡んで複数ページに分割されるバグがあったため、`.print-stage`の高さは固定mm値にしている
-  - **バグ修正**: 「PNGをダウンロード」ボタンを連打(または処理中に再クリック)すると、巨大なcanvasを同時に複数確保しようとして`canvas.toBlob`が失敗することがあった(ステージが広い/段数が多いほど発生しやすい)。`OutputScreen.tsx`に`isExporting`状態を追加し、書き出し中はボタンを無効化して多重実行そのものを防いだ。また失敗時はコンソールに埋もれさせず、画面上に「解像度を下げるか、しばらく待ってから再度お試しください」という文言で表示するようにした(`exportError`)。なお、段数・板の枚数が多い大きなステージで解像度2倍・3倍を選ぶと、多重実行でなくても単発でcanvasサイズの上限に達して失敗しうることを確認済み(ブラウザのcanvas面積上限による)。この根本原因(巨大ステージでの高解像度書き出し)自体の解消(分割書き出し等)は未対応
-- 配置エディタの支援機能をひととおり実装済み:
-  - 団員の個別追加フォーム(`AddMemberForm.tsx`、一括貼り付けとは別)
-  - コマの選択・shift+クリックでの複数選択・「未配置に戻す」(`UNPLACE_MEMBERS`)・「横一列に整列」(`ALIGN_MEMBERS_ROW`、選択メンバーの平均Y・平均X中心に`personSpacingMm`間隔で並べ替え)
-  - コマの重なり警告(`personSpacingMm`未満の距離のペアに赤い破線リングを表示。`StageSvgCanvas`内で都度計算)
-  - 中心線ガイド(`GuideLines.tsx`)。段の境界は各段の矩形の枠線で表現済みのため追加のガイドは無し
-  - グリッド吸着(ON/OFFは配置エディタのローカルUI状態、間隔は`settings.snapIntervalMm`としてSettings画面から変更可能)
-  - ズーム(ホイール、カーソル位置を中心に)/パン(背景ドラッグ)。`viewportOverride`(SVGのviewBox 4値)をPlacementEditorScreenのローカル状態として持ち、一度操作すると自動フィットから独立する。「表示をリセット」ボタンで解除
-- UI/デザインを一通り整備済み。UIコンポーネントライブラリは追加せず(依存最小限の方針)、`index.css`にCSSカスタムプロパティ(`--color-*`, `--space-*`など)ベースの軽量デザインシステムを作り、素のHTML要素(button/input/select/table)への基本スタイル適用で大部分をカバーしている。個別コンポーネントは`.card`/`.field-row`/`.field-label`/`.btn-primary`/`.btn-danger`/`.btn-small`などの共通クラスを使う運用。配置エディタのサイドバーは`.placement-sidebar`/`.sidebar-section`/`.selection-panel`で区画分けした。新しい画面・フォームを追加する際もこの共通クラスを優先し、個別にinline styleで作り込みすぎないこと
-    - **ハマった点**: パン/ズームでSVGのviewBox(SVG要素自身のローカル空間)を直接書き換える処理は、`group`(`<g transform="scale(1,-1)">`)のCTMではなく**SVG要素自身**のCTM(`svg.getScreenCTM()`)を使うこと。groupのCTMはドメインmm座標(Y反転前)→画面の変換であり、viewBoxはY反転後(SVG自身のローカル)空間の値なので、groupのCTMを使うとY軸だけ符号が反転し、パン・ズームの向きが逆になる
-- 新しい「設定」タブを追加(`SettingsScreen.tsx`)。占有幅・コマ直径・文字サイズ・グリッド吸着間隔をUIから変更できる
-- 段の高さをプリセット(5寸/7寸/1尺/1尺5寸/2尺、`heightPresets.ts`)+その他自由入力(mm/尺寸切り替え、`shakuSunToMm`/`mmToShakuSun`)で選べるようにし、「全段を同じ高さに設定」の一括ボタンも追加。`TierCard`はuseEffectで`tier.height_mm`の外部変化(一括設定など)に表示を同期させている
-- Prop(指揮者・ピアノ)の配置を実装済み。指揮者は団員コマと同じ丸(固定色+「指揮」ラベル)、ピアノは簡略化したグランドピアノの上面形(`PropsLayer.tsx`の`PIANO_PATH`、要件定義8章の未決事項につき正確な形ではなく模式図)。「指揮者を追加」「ピアノを追加」ボタンで追加し、団員コマと同じドラッグ機構で移動、選択中はピアノのみ回転ボタン(±30度)を表示。指揮者台の有無の切り替えは今回見送り(SHOULD相当のため)
-- 決定事項の補足:
-  - 段のY方向位置は「前の段の奥行きの累積」で自動決定(`computeTierRanges`)
-  - segmentのoffsetX/Y基準となる「段の中心」はステージ中心(X=0)と一致させる。simpleモードでは常に0固定
-  - 配置済み/未配置はPlacementの存在有無で判定し、Memberにフラグは持たせない
-  - 1人あたりの占有幅(500mm)・コマ直径(400mm)・文字サイズ(120mm)は`src/state/settings.ts`に暫定値として置いている。要件定義8章の未決事項のため、実装しながら調整する前提
-- ステージ設定を「板(山台)をプルダウンで選んで何枚並べるか」ベースに作り直した(当初の「幅・奥行を直接数値入力」から変更):
-  - **床はもう段(Tier)ではない**。`Stage.tiers`は実際に組む段だけを表し、`order=0`が最前列の段(旧仕様の「床」はここから除外)。床は「どの段の範囲にも入らない場所」として`StageSvgCanvas`側で自動描画するだけで、入力欄・データは持たない
-  - **1段=1種類の板だけ**(異なる幅の板を同じ段で混在させることはしない、と確認済み)。プルダウンで板(幅×奥行のセット。`src/domain/boardCatalog.ts`の`BOARD_CATALOG`)を選び、枚数を入力すると、板1枚=segment1つとして`createSegmentsFromBoard`が横並びに自動生成する(段の型自体は変更なし。もともと「segments配列で持つ」設計にしていたのが活きた形)
-  - `BOARD_CATALOG`は要件定義には無い、特定会場の規格を暫定的に埋め込んだもの(幅6尺/5尺/4尺/3尺×奥行3尺、幅6尺×奥行6尺)。プルダウンには「その他(自由入力)」もあり、カタログにない規格にも対応できる。他会場の規格が増えたら`boardCatalog.ts`に追加していく想定
-  - `findTierAt`は「どの段の範囲にも入らない=床」を`undefined`で表すようにした(以前は最も近い段にフォールバックしていたが、床が段でなくなったため意味が変わった)
-- 配置エディタのズームをトラックパッド/ホイールジェスチャーからスライダー(25%〜300%、5%刻み、デフォルト100%)に変更した。`PlacementEditorScreen.tsx`の`wheel`イベントリスナーは削除し、`applyZoom(percent)`が現在のviewBox中心を保ったまま`viewportOverride`の幅・高さだけを再計算する。100%基準のサイズ(`zoomBaseSizeRef`)は初回操作時に1度だけ固定し、以降はそのつどDOMから読んだ現在のviewBox中心を使うことで、パン後にズームしても位置がリセットされないようにしている。「表示をリセット」は`viewportOverride`とズーム%と基準サイズの3つをまとめて初期化する`resetView()`に統一
-- 新規の段のデフォルト板を`BOARD_CATALOG[0]`(幅6尺奥行3尺)に変更した(以前は最後の要素=幅6尺奥行6尺がデフォルトだった)
-- `TierCard`の「反映」ボタンを廃止し、自動反映にした。板の`<select>`は`onChange`で即時反映、枚数・自由入力の幅/奥行・高さのmm/尺/寸入力は`onBlur`で反映する(1文字ごとのdispatchで履歴が荒れるのを避けるため)。`applyBoard`/`applyCustomHeight`はReactのstate更新が非同期なことによる古い値参照を避けるため、呼び出し側から明示的に引数で値を渡す設計にしている
-- 配置エディタにスマートガイド(イラレ的な整列ガイド)を実装した(要件定義には無い、ユーザーからの追加要望)。仕様は事前に確認済み: (1)近づいたら実際にスナップする、(2)候補は「他の団員コマ」と「段の境界・中心線」のみ(指揮者・ピアノは候補に含めない)、(3)既存の「グリッド吸着」とは独立して動作し、生の値から見て近い方(グリッド or ガイド)に吸着する
-  - `src/coords/smartGuides.ts`: `computeGuideCandidates`が中心線(x=0)・各segmentの左右端/前後端・他の配置済みメンバーの座標から候補を集める(ドラッグ中の本人は除外)。`applySnapping`が軸ごとにガイド候補とグリッド候補を比較し、生の値に近い方を採用する
-  - スマートガイドのしきい値は画面上のpx基準(`SMART_GUIDE_THRESHOLD_PX`、8px)。ズーム倍率に関わらず感度が一定になるよう、`group.getScreenCTM()`から都度mm換算する
-  - `PlacementEditorScreen.tsx`の`computeSnappedPosition`が、ドラッグ中のプレビュー表示とドロップ時の確定位置の両方で共通して使われる(表示と実際の配置がずれないようにするため)
-  - 赤い実線のガイド線は`GuideLines.tsx`の`SmartGuideLines`で描画。既存の中心線ガイド(常時表示)とは別レイヤーで、ドラッグ中に整列した軸だけを表示する
-- カラーリングとタブUXを改善(ユーザーからの追加要望)。事前に方向性を確認済み: (1)アクセント色を鮮やかに(ベースは白系のまま維持)、(2)タブは番号付きステップ風にし、現在地点を大きく強調、「設定」はフロー外の補助操作として分離
-  - `--color-accent`を淡い青(#2a78d6)からビビッドなティール(#0d9488)に変更。コマ選択時の縁取り(`ChipLayer.tsx`/`PropsLayer.tsx`)や中心線ガイド、`.selection-panel`の配色もこのアクセントに合わせて統一した(以前は個別にハードコードされた青だった)
-  - `TabNav.tsx`を「ステージ設定→団員登録→配置エディタ→出力」の4ステップ(`.step-flow`/`.step-item`、番号の丸+矢印でつながる)と、フロー外の補助操作(「設定」ボタン+Undo/Redo、`.tab-nav-aux`)に分離した。現在のタブだけ番号の丸を塗りつぶし・拡大表示し、進捗チェック(完了マーク)のような状態管理は増やしていない
-- OSSとしての配布・収益化の方針を検討中(要件定義の範囲外、ユーザーからの追加要望)。「合唱活動を豊かにする開発をしているエンジニアであることを知ってもらいたい/緩やかに収益化したい」という動機から、まず広告ではなく**フッター(問い合わせリンク)**を実装した(`AppFooter.tsx`、`App.tsx`の`.app-shell`直下に常時表示)。問い合わせ用Googleフォームへの外部リンクのみで、外部通信を伴う機能(広告・寄付ウィジェット等)は無い。既存の印刷用CSS(`@media print`で`.print-sheet`以外を非表示にする既存ルール)によりPDF/PNG出力には写り込まない
-  - 当初は作者名・SNSリンクも載せる予定だったが、ユーザー判断で見送り、問い合わせリンクのみにした
-  - 広告(バナー・動画とも)は一旦見送り。理由: ニッチな用途での収益見込みが小さいこと、実名(団員名)を扱う画面にトラッキング広告が常駐すると学校・PTA系団体からの信頼を損ないうること、動画広告は導入コストが高いこと
-  - 寄付・応援導線(GitHub Sponsors等)はプラットフォーム未定のため今回は保留
-- 配布方法はGitHub Pagesでの静的公開に決定。リポジトリをPublicに変更し(無料の個人アカウントではPrivateリポジトリからのPages公開ができないため)、リポジトリ設定のPages SourceをGitHub Actionsに切り替え済み(いずれもユーザーがGitHub上で対応)
-  - `vite.config.ts`に`base: '/StageOrderSys/'`を追加(プロジェクトページはサブパス配信になるため)。これにより`npm run dev`のローカル起動時も`http://localhost:5183/StageOrderSys/`にリダイレクトされるようになった(挙動が変わっただけで、開発上の支障はない)
-  - `.github/workflows/deploy.yml`を追加。`main`ブランチへのpushをトリガーに`npm ci`→`npm run build`→`actions/upload-pages-artifact`→`actions/deploy-pages`で自動公開する(GitHub公式アクションのみ使用、npm依存の追加なし)
-  - 作業ブランチの運用: `MVP`→`dev`→`main`の順にマージしてから`main`にpushする(`main`へのpushでPages公開ワークフローが動く)
+- 主要ディレクトリ:
+  - `src/domain/`: Stage/Tier/Segment/Part/Member/Placement/Propの型とドメインロジック(段のY方向積み上げは`tierLayout.ts`、表示名自動解決は`displayName.ts`、山台カタログは`boardCatalog.ts`)
+  - `src/state/`: domain state用の単一reducer(`domainReducer.ts`)を`historyReducer.ts`がUndo/Redo用にラップ(`{past, present, future}`、1dispatch=1履歴、上限100件)。UI状態(タブ・選択・ドラッグ中座標・ズーム/パン等)はdomain stateと分離しUndo対象外
+  - `src/coords/`: SVGのuser space自体をmm相当として扱う。ポインタ→mm変換は`pointerToMm.ts`、スマートガイドは`smartGuides.ts`
+- 画面: ステージ設定・団員登録・配置エディタ・出力・設定の5画面。タブは「ステージ設定→団員登録→配置エディタ→出力」の4ステップ表示+「設定」は補助タブ
+- 実装済みの主な機能:
+  - **ステージ設定**: 山台(`BOARD_CATALOG`、要件定義には無い暫定の会場規格)をプルダウンで選び枚数指定、段の高さはプリセット(5寸〜2尺)+自由入力(mm/尺寸)、全段一括設定。1段=1種類の板のみ。床はTierではなく`StageSvgCanvas`側で自動描画
+  - **団員登録**: 個別追加・一括貼り付け・CSVインポート(要件定義外。姓/名/パート列、既存名簿への追加のみ)、パート色は固定8色パレットから選択
+  - **配置エディタ**: ドラッグ配置、複数選択+横一列整列、重なり警告、グリッド吸着、スマートガイド(他コマ/段境界/中心線に吸着、グリッドとは独立で近い方を採用)、ズーム(スライダー25〜300%)/パン、指揮者・ピアノ配置、Undo/Redo
+  - **出力**: PNG(1〜3倍)/A4横印刷、タイトル・日付・団体名。書き出し中はボタンを無効化して多重実行を防止
+  - **設定**: 占有幅・コマ直径・文字サイズ・グリッド吸着間隔(いずれも要件定義8章の未決事項につき暫定値)
+  - ブラウザ自動退避(`sessionStorage`、domain stateの現在値のみ、UIには出さない)
+  - 初回訪問時の案内モーダル(通信しない旨+問い合わせ先を一度だけ表示、`localStorage`で既読管理)、フッターに問い合わせリンク(Googleフォーム/X DM)
+- 意図的に未実装(SHOULD/COULD): 左右反転(ミラー)、パートごとの人数カウント表示、名簿の並べ替え、段のadvancedモード(扇形)
+- 配布: GitHub Pages(`https://nozomu20.github.io/StageOrderSys/`)。リポジトリはPublic。`vite.config.ts`に`base: '/StageOrderSys/'`。作業ブランチは`MVP`→`dev`→`main`の順にマージしてpush(`main`へのpushで`.github/workflows/deploy.yml`が自動ビルド・公開)
+
+## 非自明な注意点(ハマりどころ)
+
+- パン/ズームでSVGのviewBoxを書き換える処理は、`group`(`scale(1,-1)`のCTM)ではなく**SVG要素自身**のCTM(`svg.getScreenCTM()`)を使うこと。groupのCTMを使うとY軸の符号が反転し、パン・ズームの向きが逆になる
+- 印刷CSSは`.print-stage`の高さを`flex:1`ではなく固定mm値にすること(`flex:1`だとページ計算とSVGの縦横比が絡んで複数ページに分割される)
+- 名簿インポートはCSVのみ対応。xlsxパッケージ(SheetJS npm版0.18.5)にプロトタイプ汚染・ReDoSの既知脆弱性があり修正版がnpmに無いため、自前のCSVパーサ(`src/import/parseRosterCsv.ts`)にした。.xlsx対応が必要になったらSheetJS公式CDNの修正済みビルドを検討し、npmレジストリ経由は避けること
+- PNG書き出しは、大きなステージ(段数・板枚数が多い)で解像度2〜3倍を選ぶとcanvasサイズの上限で失敗することがある(ブラウザのcanvas面積上限)。連打による多重実行は防止済みだが、単発でも大きすぎると失敗しうる根本原因(分割書き出し等)は未解消
+- package-lock.jsonをmacOSで生成するとCIのLinux環境で`npm ci`が失敗することがある(`@emnapi/*`等のoptional dependencyのバージョンずれ)。CI失敗時はnode_modules+lockfileを再生成して整合を取る

@@ -302,6 +302,37 @@ tbody tr:hover {
   color: var(--color-accent);
 }
 
+/* 初回訪問時の案内モーダル。 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 28, 26, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 100;
+}
+
+.modal-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  max-width: 480px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(28, 28, 26, 0.25);
+}
+
+.modal-card p {
+  font-size: var(--font-base);
+}
+
+.modal-card a {
+  color: var(--color-accent);
+}
+
 .screen {
   padding: var(--space-5);
   max-width: 1000px;

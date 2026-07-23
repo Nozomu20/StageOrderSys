@@ -2,6 +2,7 @@ import { DomainStateProvider } from "../state/DomainStateContext";
 import { UIStateProvider, useUIState } from "../state/UIStateContext";
 import { TabNav } from "./TabNav";
 import { AppFooter } from "./AppFooter";
+import { WelcomeModal } from "./WelcomeModal";
 import { StageSettingsScreen } from "./stageSettings/StageSettingsScreen";
 import { RosterScreen } from "./roster/RosterScreen";
 import { PlacementEditorScreen } from "./placement/PlacementEditorScreen";
@@ -48,6 +49,7 @@ export function App() {
           <TabNav />
           <ScreensArea />
           <AppFooter />
+          <WelcomeModal />
         </div>
       </UIStateProvider>
     </DomainStateProvider>
