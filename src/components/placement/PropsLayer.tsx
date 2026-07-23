@@ -24,6 +24,12 @@ const PIANO_PATH = `
   Z
 `;
 
+// ChipLayerと同じ考え方で、見た目の大きさは変えずタップ・ドラッグの
+// 当たり判定だけを広げるための余白(mm)。
+const TOUCH_HIT_PADDING_MM = 150;
+// ピアノの形(PIANO_PATH)のおおよその外接矩形+当たり判定の余白。
+const PIANO_HIT_BOUNDS = { x: -650, y: -1235, width: 1700, height: 1385 };
+
 export function PropsLayer({
   props,
   chipDiameter_mm,
@@ -37,6 +43,7 @@ export function PropsLayer({
       {props.map((prop) => {
         const isSelected = prop.id === selectedPropId;
         if (prop.type === "conductor") {
+          const hitRadius = chipDiameter_mm / 2 + TOUCH_HIT_PADDING_MM;
           return (
             <g key={prop.id}>
               <circle
@@ -46,6 +53,20 @@ export function PropsLayer({
                 fill="#333333"
                 stroke={isSelected ? "#0d9488" : "#000000"}
                 strokeWidth={isSelected ? 10 : 4}
+                pointerEvents="none"
+              />
+              <MmText
+                x_mm={prop.x_mm}
+                y_mm={prop.y_mm}
+                fontSize_mm={fontSize_mm}
+              >
+                {prop.label ?? "指揮"}
+              </MmText>
+              <circle
+                cx={prop.x_mm}
+                cy={prop.y_mm}
+                r={hitRadius}
+                fill="transparent"
                 style={{ cursor: "grab", touchAction: "none" }}
                 onPointerDown={(e) => {
                   e.stopPropagation();
@@ -56,13 +77,6 @@ export function PropsLayer({
                   onPropClick(prop.id);
                 }}
               />
-              <MmText
-                x_mm={prop.x_mm}
-                y_mm={prop.y_mm}
-                fontSize_mm={fontSize_mm}
-              >
-                {prop.label ?? "指揮"}
-              </MmText>
             </g>
           );
         }
@@ -77,6 +91,14 @@ export function PropsLayer({
               fill="#222222"
               stroke={isSelected ? "#0d9488" : "#000000"}
               strokeWidth={isSelected ? 10 : 4}
+              pointerEvents="none"
+            />
+            <rect
+              x={PIANO_HIT_BOUNDS.x}
+              y={PIANO_HIT_BOUNDS.y}
+              width={PIANO_HIT_BOUNDS.width}
+              height={PIANO_HIT_BOUNDS.height}
+              fill="transparent"
               style={{ cursor: "grab", touchAction: "none" }}
               onPointerDown={(e) => {
                 e.stopPropagation();

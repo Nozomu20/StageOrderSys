@@ -32,34 +32,14 @@ export function UnplacedMemberList({
             <li
               key={m.id}
               onPointerDown={(e) => onDragStart(m.id, e)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "6px 8px",
-                marginBottom: 2,
-                borderRadius: "var(--radius)",
-                cursor: "grab",
-                userSelect: "none",
-                opacity: draggingMemberId === m.id ? 0.4 : 1,
-                touchAction: "none",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--color-bg)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
+              className={
+                "unplaced-item" +
+                (draggingMemberId === m.id ? " is-dragging" : "")
+              }
             >
               <span
-                style={{
-                  display: "inline-block",
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                  background: colorByPartId.get(m.partId) ?? "#999",
-                }}
+                className="unplaced-item-dot"
+                style={{ background: colorByPartId.get(m.partId) ?? "#999" }}
               />
               <span>{displayNames.get(m.id) ?? m.familyName}</span>
             </li>

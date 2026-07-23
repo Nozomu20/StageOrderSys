@@ -20,6 +20,7 @@ export function MemberTable() {
         </p>
       )}
       {state.roster.members.length > 0 && (
+      <div className="table-scroll">
       <table>
         <thead>
           <tr>
@@ -99,6 +100,7 @@ export function MemberTable() {
           ))}
         </tbody>
       </table>
+      </div>
       )}
     </div>
   );

@@ -53,6 +53,10 @@ export function PlacementEditorScreen() {
     () => new Set(),
   );
   const [snapEnabled, setSnapEnabled] = useState(false);
+  // スマホにはshiftキーがないため、複数選択の代替手段としてモードで切り替える。
+  const [multiSelectMode, setMultiSelectMode] = useState(false);
+  // スマホではサイドバーをボトムドロワーにする(PC幅ではCSS側で常時表示に上書きする)。
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [viewportOverride, setViewportOverride] = useState<ViewBoxRect | null>(
     null,
   );
@@ -260,6 +264,9 @@ export function PlacementEditorScreen() {
 
   function startDragMember(memberId: MemberId, e: ReactPointerEvent) {
     setDrag({ target: { kind: "member", id: memberId }, clientX: e.clientX, clientY: e.clientY });
+    // スマホでは未配置一覧からのドラッグ開始と同時にドロワーを閉じ、
+    // キャンバス全体を見ながらドロップできるようにする。
+    setIsSidebarOpen(false);
   }
 
   function startDragProp(propId: PropId, e: ReactPointerEvent) {
@@ -274,7 +281,7 @@ export function PlacementEditorScreen() {
   function handleChipClick(memberId: MemberId, e: ReactMouseEvent) {
     setSelectedPropId(null);
     setSelectedMemberIds((prev) => {
-      const isMultiSelect = e.shiftKey || e.metaKey || e.ctrlKey;
+      const isMultiSelect = multiSelectMode || e.shiftKey || e.metaKey || e.ctrlKey;
       if (!isMultiSelect) {
         return prev.size === 1 && prev.has(memberId) ? new Set() : new Set([memberId]);
       }
@@ -318,8 +325,19 @@ export function PlacementEditorScreen() {
   const selectedProp = state.stage.props.find((p) => p.id === selectedPropId) ?? null;
 
   return (
-    <div style={{ display: "flex", height: "100%" }}>
-      <div className="placement-sidebar">
+    <div style={{ display: "flex", height: "100%", position: "relative" }}>
+      <button
+        type="button"
+        className="btn-primary sidebar-drawer-toggle"
+        onClick={() => setIsSidebarOpen((prev) => !prev)}
+      >
+        {isSidebarOpen
+          ? "閉じる"
+          : selectedMemberIds.size > 0
+            ? `選択中: ${selectedMemberIds.size}名`
+            : `メニュー・未配置(${unplacedMembers.length})`}
+      </button>
+      <div className={"placement-sidebar" + (isSidebarOpen ? " is-open" : "")}>
         <UnplacedMemberList
           members={unplacedMembers}
           parts={state.roster.parts}
@@ -356,6 +374,22 @@ export function PlacementEditorScreen() {
               onChange={(e) => setSnapEnabled(e.target.checked)}
             />
             グリッド吸着({state.settings.snapIntervalMm}mm間隔)
+          </label>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              marginTop: 4,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={multiSelectMode}
+              onChange={(e) => setMultiSelectMode(e.target.checked)}
+            />
+            複数選択モード(shiftキー不要でタップ追加)
           </label>
           <button className="btn-small" style={{ marginTop: 8 }} onClick={resetView}>
             表示をリセット
@@ -431,7 +465,7 @@ export function PlacementEditorScreen() {
               <div style={{ fontSize: 13, marginBottom: 6 }}>
                 選択中: <strong>{selectedMemberIds.size}名</strong>
                 <div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
-                  (shift+クリックで複数選択)
+                  (shift+クリック、または複数選択モードでタップして複数選択)
                 </div>
               </div>
               <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>

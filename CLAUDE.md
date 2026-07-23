@@ -50,6 +50,12 @@
 - 意図的に未実装(SHOULD/COULD): 左右反転(ミラー)、パートごとの人数カウント表示、名簿の並べ替え、段のadvancedモード(扇形)
 - 配布: GitHub Pages(`https://nozomu20.github.io/StageOrderSys/`)。リポジトリはPublic。`vite.config.ts`に`base: '/StageOrderSys/'`。`main`へのpushで`.github/workflows/deploy.yml`が自動ビルド・公開する
 - ブランチ運用: MVPフェーズ完了後、`MVP`ブランチは削除済み。以降は`dev`からfeatureブランチを切って機能追加・バグ修正を行い、`dev`にマージ。区切りのいいところで`dev`→`main`にマージしてpushする(`main`へのpushが本番公開のトリガーになるため)
+- レスポンシブ対応を実装済み(スマホでもPCと遜色ない編集体験を目標)。mm座標系・SVG描画・ドメインロジックには手を入れず、CSS/操作方法のみで対応:
+  - ブレークポイントは640px(スマホ)・960px(タブレット/配置エディタのサイドバー切り替え)
+  - `.field-row`は640px以下で縦積みに、団員一覧テーブルは`.table-scroll`で横スクロール対応
+  - 配置エディタのサイドバーは960px以下で画面下からのドロワーになる(`.placement-sidebar.is-open`、`PlacementEditorScreen.tsx`の`isSidebarOpen`)。未配置一覧からドラッグを開始すると自動でドロワーを閉じ、キャンバス全体を見ながらドロップできるようにしている
+  - コマ・指揮者・ピアノは、見た目の大きさはそのままにタップ/ドラッグの当たり判定だけ広げてある(`ChipLayer.tsx`/`PropsLayer.tsx`の透明な当たり判定用circle/rect、`TOUCH_HIT_PADDING_MM`)
+  - スマホにはshiftキーが無いため、「複数選択モード」チェックボックスを追加(ON中はタップだけで複数選択の追加/解除ができる)
 
 ## 非自明な注意点(ハマりどころ)
 

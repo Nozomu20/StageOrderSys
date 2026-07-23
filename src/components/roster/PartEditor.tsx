@@ -22,6 +22,7 @@ export function PartEditor() {
                 alignItems: "center",
                 gap: 8,
                 marginBottom: 8,
+                flexWrap: "wrap",
               }}
             >
               <ColorSwatchPicker
