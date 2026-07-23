@@ -5,6 +5,11 @@ export interface PngHeaderInfo {
 }
 
 const HEADER_HEIGHT_PX = 60;
+// 「1倍」を、ステージの長辺がこのくらいのpxになる解像度として基準化する。
+// 以前はmmの数値をそのままpxとして使っていたため、ステージが広い
+// (段数・板枚数が多い)ほど画像が際限なく巨大化し、ブラウザのcanvas
+// サイズ上限に達して書き出しに失敗することがあった。
+const BASE_LONG_EDGE_PX = 1800;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -24,8 +29,10 @@ export async function exportSvgToPngBlob(
   header: PngHeaderInfo,
 ): Promise<Blob> {
   const viewBox = svgEl.viewBox.baseVal;
-  const stageWidth = Math.round(viewBox.width * scale);
-  const stageHeight = Math.round(viewBox.height * scale);
+  const longEdgeMm = Math.max(viewBox.width, viewBox.height);
+  const pxPerMm = (BASE_LONG_EDGE_PX / longEdgeMm) * scale;
+  const stageWidth = Math.round(viewBox.width * pxPerMm);
+  const stageHeight = Math.round(viewBox.height * pxPerMm);
   const headerHeight = Math.round(HEADER_HEIGHT_PX * scale);
   const width = stageWidth;
   const height = stageHeight + headerHeight;
