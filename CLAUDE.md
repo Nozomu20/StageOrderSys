@@ -48,7 +48,8 @@
   - ブラウザ自動退避(`sessionStorage`、domain stateの現在値のみ、UIには出さない)
   - 初回訪問時の案内モーダル(通信しない旨+問い合わせ先を一度だけ表示、`localStorage`で既読管理)、フッターに問い合わせリンク(Googleフォーム/X DM)
 - 意図的に未実装(SHOULD/COULD): 左右反転(ミラー)、パートごとの人数カウント表示、名簿の並べ替え、段のadvancedモード(扇形)
-- 配布: GitHub Pages(`https://nozomu20.github.io/StageOrderSys/`)。リポジトリはPublic。`vite.config.ts`に`base: '/StageOrderSys/'`。作業ブランチは`MVP`→`dev`→`main`の順にマージしてpush(`main`へのpushで`.github/workflows/deploy.yml`が自動ビルド・公開)
+- 配布: GitHub Pages(`https://nozomu20.github.io/StageOrderSys/`)。リポジトリはPublic。`vite.config.ts`に`base: '/StageOrderSys/'`。`main`へのpushで`.github/workflows/deploy.yml`が自動ビルド・公開する
+- ブランチ運用: MVPフェーズ完了後、`MVP`ブランチは削除済み。以降は`dev`からfeatureブランチを切って機能追加・バグ修正を行い、`dev`にマージ。区切りのいいところで`dev`→`main`にマージしてpushする(`main`へのpushが本番公開のトリガーになるため)
 
 ## 非自明な注意点(ハマりどころ)
 
