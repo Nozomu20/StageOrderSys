@@ -82,4 +82,8 @@
 - OSSとしての配布・収益化の方針を検討中(要件定義の範囲外、ユーザーからの追加要望)。「合唱活動を豊かにする開発をしているエンジニアであることを知ってもらいたい/緩やかに収益化したい」という動機から、まず広告ではなく**フッター(問い合わせリンク)**を実装した(`AppFooter.tsx`、`App.tsx`の`.app-shell`直下に常時表示)。問い合わせ用Googleフォームへの外部リンクのみで、外部通信を伴う機能(広告・寄付ウィジェット等)は無い。既存の印刷用CSS(`@media print`で`.print-sheet`以外を非表示にする既存ルール)によりPDF/PNG出力には写り込まない
   - 当初は作者名・SNSリンクも載せる予定だったが、ユーザー判断で見送り、問い合わせリンクのみにした
   - 広告(バナー・動画とも)は一旦見送り。理由: ニッチな用途での収益見込みが小さいこと、実名(団員名)を扱う画面にトラッキング広告が常駐すると学校・PTA系団体からの信頼を損ないうること、動画広告は導入コストが高いこと
-  - 寄付・応援導線(GitHub Sponsors等)はプラットフォーム未定のため今回は保留。配布方法(GitHub Pagesでの静的公開 vs ローカルインストール)も方針検討中で未確定
+  - 寄付・応援導線(GitHub Sponsors等)はプラットフォーム未定のため今回は保留
+- 配布方法はGitHub Pagesでの静的公開に決定。リポジトリをPublicに変更し(無料の個人アカウントではPrivateリポジトリからのPages公開ができないため)、リポジトリ設定のPages SourceをGitHub Actionsに切り替え済み(いずれもユーザーがGitHub上で対応)
+  - `vite.config.ts`に`base: '/StageOrderSys/'`を追加(プロジェクトページはサブパス配信になるため)。これにより`npm run dev`のローカル起動時も`http://localhost:5183/StageOrderSys/`にリダイレクトされるようになった(挙動が変わっただけで、開発上の支障はない)
+  - `.github/workflows/deploy.yml`を追加。`main`ブランチへのpushをトリガーに`npm ci`→`npm run build`→`actions/upload-pages-artifact`→`actions/deploy-pages`で自動公開する(GitHub公式アクションのみ使用、npm依存の追加なし)
+  - 作業ブランチの運用: `MVP`→`dev`→`main`の順にマージしてから`main`にpushする(`main`へのpushでPages公開ワークフローが動く)
