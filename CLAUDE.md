@@ -46,7 +46,7 @@
   - **出力**: PNG(1〜3倍)/A4横印刷、タイトル・日付・団体名。書き出し中はボタンを無効化して多重実行を防止
   - **設定**: 占有幅・コマ直径・文字サイズ・グリッド吸着間隔(いずれも要件定義8章の未決事項につき暫定値)
   - ブラウザ自動退避(`sessionStorage`、domain stateの現在値のみ、UIには出さない)
-  - 初回訪問時の案内モーダル(通信しない旨+問い合わせ先を一度だけ表示、`localStorage`で既読管理)、フッターに問い合わせリンク(Googleフォーム/X DM)
+  - 初回訪問時の案内モーダル(`WelcomeModal.tsx`)。通信しない旨+問い合わせ先+アップデート情報を表示する。`localStorage`には既読フラグ(boolean)ではなく`CONTENT_VERSION`(バージョン文字列)を保存しており、この値を変えると全員に再表示される。`UPDATE_NOTES`配列にアップデート内容を追記するたびに`CONTENT_VERSION`も更新すること。フッターに問い合わせリンク(Googleフォーム/X DM)
   - 作業内容の保存/読み込み(要件定義5.3のCOULD項目、ユーザーからの追加要望。セッションを超えて続きから作業したい向け)。domain state全体(Undo/Redo履歴は含まない)を`schemaVersion`付きJSONにした上でbase64で難読化し、独自拡張子`.stageorder`(`src/state/savedFile.ts`の`FILE_EXTENSION`)で書き出す。テキストエディタで開いても団員名簿がそのまま見えないようにするための難読化であり、暗号化ではない(このプロジェクトはOSSでソースが公開されているため、固定鍵の暗号化等は「隠しているだけ」で実質的な保護にはならないと判断した)。本当の保護が必要になったらパスワード付き暗号化(Web Crypto API)を検討すること
     - 保存は「出力」画面、読み込みは「ステージ設定」画面(`src/export/exportJson.ts`/`src/import/importJson.ts`がそれぞれ担当)。読み込み側は難読化前の素のJSON(以前のバージョンで保存したファイル)もフォールバックで読めるようにしている
     - 読み込みは現在の作業内容を丸ごと置き換える(Undo/Redo履歴もリセット)ため、アプリ内モーダルで確認を挟む。`historyReducer.ts`に`LOAD_STATE`アクションを追加し、`DomainStateContext.tsx`の`useLoadDomainState()`から呼び出す
