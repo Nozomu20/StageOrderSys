@@ -11,7 +11,10 @@ export interface HistoryState {
 }
 
 export type UndoRedoAction = { type: "UNDO" } | { type: "REDO" };
-export type HistoryAction = DomainAction | UndoRedoAction;
+// JSONファイルからの読み込みは、通常のdomain操作ではなく状態そのものの
+// 置き換えなので、historyReducerの層で扱う(Undo/Redo履歴もリセットする)。
+export type LoadStateAction = { type: "LOAD_STATE"; state: DomainState };
+export type HistoryAction = DomainAction | UndoRedoAction | LoadStateAction;
 
 // 際限なく積み上げないための上限。
 const MAX_HISTORY_LENGTH = 100;
@@ -42,6 +45,10 @@ export function historyReducer(
       present: next,
       future: state.future.slice(1),
     };
+  }
+
+  if (action.type === "LOAD_STATE") {
+    return createInitialHistoryState(action.state);
   }
 
   const nextPresent = domainReducer(state.present, action);

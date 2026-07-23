@@ -80,3 +80,11 @@ export function useUndoRedo(): {
     canRedo: meta.canRedo,
   };
 }
+
+// JSONファイルからの読み込みで、domain state全体を置き換える
+// (Undo/Redo履歴もリセットされる)。
+export function useLoadDomainState(): (state: DomainState) => void {
+  const meta = useContext(HistoryMetaContext);
+  if (!meta) throw new Error("DomainStateProvider の外では使えません");
+  return (state: DomainState) => meta.dispatch({ type: "LOAD_STATE", state });
+}

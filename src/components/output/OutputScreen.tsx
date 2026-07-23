@@ -8,6 +8,7 @@ import { useDomainDispatch, useDomainState } from "../../state/DomainStateContex
 import { resolveDisplayNames } from "../../domain/displayName";
 import { StageSvgCanvas } from "../placement/StageSvgCanvas";
 import { exportSvgToPngBlob } from "../../export/exportPng";
+import { downloadJson } from "../../export/exportJson";
 import type { MemberId, PropId } from "../../domain/ids";
 
 const noopMember = (_memberId: MemberId, _e: ReactPointerEvent) => {};
@@ -34,6 +35,12 @@ export function OutputScreen() {
   }
 
   const displayNames = resolveDisplayNames(state.roster.members);
+
+  // セッションをまたいで続きから作業できるよう、domain state全体を
+  // JSONファイルとして保存する(要件定義5.3のCOULD項目、ユーザーからの追加要望)。
+  function handleSaveJson() {
+    downloadJson(state, `${title || "オーダー表"}.json`);
+  }
 
   // 書き出し中の連打で複数の巨大なcanvasを同時に確保しようとすると、
   // ブラウザによってはtoBlobが失敗することがあるため、処理中は
@@ -131,10 +138,17 @@ export function OutputScreen() {
             {exportError}
           </p>
         )}
-        <div className="field-row" style={{ marginBottom: 0 }}>
+        <div className="field-row">
           <span className="field-label">印刷</span>
           <button onClick={() => window.print()}>印刷する(A4横・PDF)</button>
         </div>
+        <div className="field-row" style={{ marginBottom: 0 }}>
+          <span className="field-label">作業内容</span>
+          <button onClick={handleSaveJson}>JSONで保存</button>
+        </div>
+        <p className="screen-hint" style={{ margin: "8px 0 0" }}>
+          団員名簿・配置などをJSONファイルに保存できます。「ステージ設定」画面から読み込んで続きから作業できます。
+        </p>
       </div>
 
       <p className="screen-hint">プレビュー:</p>
